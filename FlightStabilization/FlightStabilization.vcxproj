@@ -45,7 +45,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\standard;C:\Users\dwelzel\Documents\Visual Studio 2015\Projects\FlightStabilization\FlightStabilization;C:\Users\dwelzel\Documents\Arduino\libraries\StandardCplusplus-master;C:\Users\dwelzel\Documents\Arduino\libraries\StandardCplusplus-master\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\me5m4duy.l4d\Micro Platforms\default\debuggers;C:\Users\dwelzel\Documents\Arduino\libraries;C:\Users\dwelzel\Documents\Visual Studio 2015\Projects\FlightStabilization\FlightStabilization;C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\standard;C:\Users\dwelzel\Documents\Arduino\libraries\StandardCplusplus-master;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\me5m4duy.l4d\Micro Platforms\default\debuggers\VM_DBG;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\me5m4duy.l4d\Micro Platforms\default\debuggers;C:\Users\dwelzel\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\tools\avr/avr/include/;C:\Program Files (x86)\Arduino\hardware\tools\avr//avr/include/avr/;C:\Program Files (x86)\Arduino\hardware\tools\avr/lib\gcc\avr\4.8.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\standard;C:\Users\dwelzel\Documents\Visual Studio 2015\Projects\FlightStabilization\FlightStabilization;C:\Program Files (x86)\Arduino\libraries\Servo\src;C:\Program Files (x86)\Arduino\libraries\Servo\src\utility;C:\Users\dwelzel\Documents\Arduino\libraries\StandardCplusplus-master;C:\Users\dwelzel\Documents\Arduino\libraries\StandardCplusplus-master\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\me5m4duy.l4d\Micro Platforms\default\debuggers;C:\Users\dwelzel\Documents\Arduino\libraries;C:\Users\dwelzel\Documents\Visual Studio 2015\Projects\FlightStabilization\FlightStabilization;C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\standard;C:\Users\dwelzel\Documents\Arduino\libraries\StandardCplusplus-master;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\me5m4duy.l4d\Micro Platforms\default\debuggers\VM_DBG;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\me5m4duy.l4d\Micro Platforms\default\debuggers;C:\Users\dwelzel\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\tools\avr/avr/include/;C:\Program Files (x86)\Arduino\hardware\tools\avr//avr/include/avr/;C:\Program Files (x86)\Arduino\hardware\tools\avr/lib\gcc\avr\4.8.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>C:\Users\dwelzel\Documents\Visual Studio 2015\Projects\FlightStabilization\FlightStabilization\__vm\.FlightStabilization.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessorDefinitions>__AVR_ATmega328p__;__AVR_ATmega328P__;_VMDEBUG=1;F_CPU=16000000L;ARDUINO=10606;ARDUINO_AVR_UNO;ARDUINO_ARCH_AVR;__cplusplus;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -74,12 +74,14 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Motor.h" />
     <ClInclude Include="PinChangeInt.h" />
     <ClInclude Include="PWMReader.h" />
     <ClInclude Include="RCRadio.h" />
     <ClInclude Include="__vm\.FlightStabilization.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Motor.cpp" />
     <ClCompile Include="PinChangeInt.cpp" />
     <ClCompile Include="PWMReader.cpp" />
     <ClCompile Include="RCRadio.cpp" />
