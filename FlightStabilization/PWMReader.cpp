@@ -1,6 +1,7 @@
-
+#include "CommonDefs.h"
 #include "PWMReader.h"
 #include "PinChangeInt.h"
+
 
 const uint8_t INVALID_TIME = -1;
 
@@ -25,24 +26,39 @@ static void handleRisingInterrupt()
 {
 	uint8_t interruptedPin = PCintPort::arduinoPin;
 
-	// Save the start time for this pin
-	startTimes[interruptedPin] = micros();
-	endTimes[interruptedPin] = INVALID_TIME;  // There is no valid end time yet
+	// Make sure the interrupted pin is valid
+	if (interruptedPin < NUM_PINS)
+	{
+		// Save the start time for this pin
+		startTimes[interruptedPin] = micros();
+		endTimes[interruptedPin] = INVALID_TIME;  // There is no valid end time yet
+	}
 
 	// Attach the falling interrupt so we can capture the end time
 	PCintPort::attachInterrupt(monitoredPin, &handleFallingInterrupt, FALLING);
+
+	DEBUG_PRINT("PWMReader: Rising interrupt on pin ");
+	DEBUG_PRINTLN(interruptedPin);
 }
 
 static void handleFallingInterrupt()
 {
 	uint8_t interruptedPin = PCintPort::arduinoPin;
 
-	// Save the end time of the interrupt
-	endTimes[interruptedPin] = micros();
+	// Make sure the interrupted pin is valid
+	if (interruptedPin < NUM_PINS)
+	{
+		// Save the end time of the interrupt
+		endTimes[interruptedPin] = micros();
+	}
 
 	// Reattach the handler to capture the next rising interrupt
 	PCintPort::attachInterrupt(monitoredPin, &handleRisingInterrupt, RISING);
+
+	DEBUG_PRINT("PWMReader: Falling interrupt on pin ");
+	DEBUG_PRINTLN(interruptedPin);
 }
+
 
 uint8_t PWMReader::getMonitoredPin()
 {
@@ -55,6 +71,8 @@ void PWMReader::monitorPin(uint8_t pinNum)
 
 	PCintPort::attachInterrupt(monitoredPin, &handleRisingInterrupt, RISING);
 
+	DEBUG_PRINT("PWMReader: monitoring pin ");
+	DEBUG_PRINTLN(monitoredPin);
 }
 
 uint8_t PWMReader::getLastPulseWidth()

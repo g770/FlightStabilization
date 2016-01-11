@@ -17,19 +17,17 @@ class Motor
  public:
 	 // Initialize the motor class
 	 // pin -- The pin the motor is connected to
-	 // minThrottle, maxThrottle -- The min and max values that may be 
-	 // sent to the writeThrottle command.  These are typically the values 
-	 // read from a receiver.
-	 void init(uint8_t pin, int minThottle, int maxThrottle);
+	 void init(uint8_t pin);
 	 
 	 // Arms the motor
 	 void arm();
 
 	 // Writes a throttle value to the motor
-	 void writeThrottle(int throttleValue);
+	 // throttleValue - A value between 0 and 100
+	 void writeThrottle(uint8_t throttleValue);
 
  private:
-	 bool throttleValueValid(int throttleValue);
+	 bool throttleValueValid(uint8_t throttleValue);
 
 	Servo motorControl;
 	int minThrottle;
