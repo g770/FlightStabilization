@@ -45,3 +45,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+FlightStabilization/FlightStabilization.vcxproj
+FlightStabilization/Debug/board.buildinfo
+*.elf
+FlightStabilization/Debug/FlightStabilization.hex
+FlightStabilization/__vm/.FlightStabilization.vsarduino.h
