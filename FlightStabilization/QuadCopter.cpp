@@ -36,3 +36,4 @@ void QuadCopter::update()
 	}
 
 }
+
