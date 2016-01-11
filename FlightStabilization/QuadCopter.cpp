@@ -1,6 +1,6 @@
 #include "CommonDefs.h"
 #include "QuadCopter.h"
-
+#include "PinConfiguration.h"
 
 // Constants defining the motor positions
 const int TOP_LEFT_MOTOR = 0;
@@ -8,23 +8,16 @@ const int TOP_RIGHT_MOTOR = 1;
 const int BOTTOM_LEFT_MOTOR = 2;
 const int BOTTOM_RIGHT_MOTOR = 3;
 
-const int MIN_THROTTLE = 0;
-const int MAX_THROTTLE = 100;
-
 void QuadCopter::init()
 {
 	// Setup the receiver (for now just the throttle channel)
-	// TODO: Correct the pin parameter
-	// Set the throttle channel to return values between 0 and 100
-	this->receiver.configureChannel(RCRadio::THROTTLE, 0, MIN_THROTTLE, MAX_THROTTLE);
+	this->receiver.configureChannel(RCRadio::THROTTLE, PinConfiguration::THROTTLE_PIN, RCRadio::NO_SCALING, RCRadio::NO_SCALING);
 
 	// Initialize the motors
-	// TODO: Correct the motor pins
-	for (int i = 0; i < NUM_MOTORS; i++)
-	{
-		this->motors[i].init(0);
-		this->motors[i].arm();
-	}
+	this->motors[TOP_LEFT_MOTOR].init(PinConfiguration::TOP_LEFT_MOTOR_PIN);
+	this->motors[TOP_RIGHT_MOTOR].init(PinConfiguration::TOP_RIGHT_MOTOR_PIN);
+	this->motors[BOTTOM_LEFT_MOTOR].init(PinConfiguration::BOTTOM_LEFT_MOTOR_PIN);
+	this->motors[BOTTOM_RIGHT_MOTOR].init(PinConfiguration::BOTTOM_RIGHT_MOTOR_PIN);
 
 	DEBUG_PRINTLN("Quadcopter: Initialized");
 }

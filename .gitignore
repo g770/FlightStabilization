@@ -50,3 +50,4 @@ FlightStabilization/Debug/board.buildinfo
 *.elf
 FlightStabilization/Debug/FlightStabilization.hex
 FlightStabilization/__vm/.FlightStabilization.vsarduino.h
+.vs/FlightStabilization/v14/.suo

@@ -7,10 +7,12 @@
 const int MIN_THROTTLE = 1000;
 const int MAX_THROTTLE = 2000;
 
+// Min and max input values for the throttle
+const int MIN_THROTTLE_IN = 0;
+const int MAX_THROTTLE_IN = MAX_THROTTLE - MIN_THROTTLE;
+
 void Motor::init(uint8_t pin)
 {
-	this->minThrottle = 0;
-	this->maxThrottle = 100;
 	this->motorControl.attach(pin);
 
 	DEBUG_PRINT("Motor: Attached to pin ");
@@ -32,7 +34,7 @@ void Motor::writeThrottle(uint8_t throttleValue)
 
 	// First map the throttle value into the correct pulse
 	// width to send to the motor, then write it
-	int microsecs = map(throttleValue, this->minThrottle, this->maxThrottle, MIN_THROTTLE, MAX_THROTTLE);
+	int microsecs = map(throttleValue, MIN_THROTTLE_IN, MAX_THROTTLE_IN, MIN_THROTTLE, MAX_THROTTLE);
 
 	this->motorControl.writeMicroseconds(microsecs);
 
@@ -42,7 +44,7 @@ void Motor::writeThrottle(uint8_t throttleValue)
 
 bool Motor::throttleValueValid(uint8_t throttleValue)
 {
-	if (throttleValue < this->minThrottle || throttleValue > this->maxThrottle)
+	if (throttleValue < MIN_THROTTLE_IN || throttleValue > MAX_THROTTLE_IN)
 	{
 		return false;
 	}

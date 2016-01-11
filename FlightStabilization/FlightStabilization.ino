@@ -4,6 +4,7 @@
  Author:	dwelzel
 */
 
+#include "PinConfiguration.h"
 #include "QuadCopter.h"
 #include <Servo.h>
 #include "CommonDefs.h"
@@ -23,6 +24,9 @@ void setup() {
 #ifdef DEBUG_LOG
 	Serial.begin(9600);
 #endif // DEBUG_LOG
+
+	// Setup pins
+	PinConfiguration::init();
 
 	copter.init();
 	runTests();  // Will only be execute if TESTMODE is defined

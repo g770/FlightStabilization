@@ -18,6 +18,8 @@ class RCRadio
 {
 
  public:
+	 static const int NO_SCALING = -1;
+
 	 enum Channel 
 	 {
 		 THROTTLE = 0,
@@ -29,9 +31,10 @@ class RCRadio
 	 // Configures a channel to monitor
 	 // channelNum - The RC channel number
 	 // pinNum - The pin number that is receiving the channel input
-	 // min - The min value for the channel (typically degrees/sec)
-	 // max - The max value for the channel
-	void configureChannel(Channel channel, uint8_t pinNum, long min, long max);
+	 // scalingMin, scalingMax -- Defines the range that results will be 
+	 // mapped into when reading from the channel.  To disable scaling 
+	 // on a channel, pass NO_SCALING for both values
+	void configureChannel(Channel channel, uint8_t pinNum, long scalingMin, long scalingMax);
 
 	// Reads the current value of the given channel
 	long readChannel(Channel channel);
@@ -39,8 +42,8 @@ class RCRadio
 private:
 	struct ChannelConfig
 	{
-		long min;
-		long max;
+		long scalingMin;
+		long scalingMax;
 		PWMReader monitor;
 	};
 

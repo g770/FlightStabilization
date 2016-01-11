@@ -30,8 +30,6 @@ class Motor
 	 bool throttleValueValid(uint8_t throttleValue);
 
 	Servo motorControl;
-	int minThrottle;
-	int maxThrottle;
 };
 
 

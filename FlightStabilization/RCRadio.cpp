@@ -1,11 +1,11 @@
 #include "RCRadio.h"
 #include "CommonDefs.h"
 
-// The min and max pulse widths on a channel
+// The min and max pulse widths that can be received on a channel
 const long MIN_CHANNEL_PULSE_WIDTH = 1000;
 const long MAX_CHANNEL_PULSE_WIDTH = 2000;
 
-void RCRadio::configureChannel(Channel channel, uint8_t pinNum, long min, long max)
+void RCRadio::configureChannel(Channel channel, uint8_t pinNum, long scalingMin, long scalingMax)
 {
 	// Instantite an object that will handle reading the values of the 
 	// pin and calculate the pulse width
@@ -14,8 +14,8 @@ void RCRadio::configureChannel(Channel channel, uint8_t pinNum, long min, long m
 
 	// Store the configuration for this channel
 	ChannelConfig config;
-	config.min = min;
-	config.max = max;
+	config.scalingMin = scalingMin;
+	config.scalingMax = scalingMax;
 	config.monitor = reader;
 
 	this->pinMonitors[channel] = config;
@@ -40,6 +40,16 @@ long RCRadio::readChannel(Channel channel)
 	DEBUG_PRINTLN(lastPulseWidth);
 
 	// Map the pulse width to the range for the channel and return it 
-	return map(lastPulseWidth, MIN_CHANNEL_PULSE_WIDTH, MAX_CHANNEL_PULSE_WIDTH, channelConfig.min, channelConfig.max);
+	long result;
+	if (channelConfig.scalingMin == NO_SCALING && channelConfig.scalingMax == NO_SCALING)
+	{
+		result = lastPulseWidth;
+	}
+	else
+	{
+		result = map(lastPulseWidth, MIN_CHANNEL_PULSE_WIDTH, MAX_CHANNEL_PULSE_WIDTH, channelConfig.scalingMin, channelConfig.scalingMax);
+	}
+
+	return result;
 }
 
