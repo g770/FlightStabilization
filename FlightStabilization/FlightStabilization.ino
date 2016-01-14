@@ -4,6 +4,7 @@
  Author:	dwelzel
 */
 
+#include "TimeInterval.h"
 #include "PinConfiguration.h"
 #include "QuadCopter.h"
 #include <Servo.h>

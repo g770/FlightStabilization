@@ -183,7 +183,7 @@ int8_t PCintPort::addPin(uint8_t arduinoPin, PCIntvoidFuncPtr userFunc, uint8_t 
 	enable(p, userFunc, mode);
 #ifdef DEBUG
 	Serial.print("addPin. pin given: "); Serial.print(arduinoPin, DEC), Serial.print(" pin stored: ");
-	int addr = (int)p;
+	addr = (int)p;
 	Serial.print(" instance addr: "); Serial.println(addr, HEX);
 #endif
 	return(1);
@@ -204,6 +204,7 @@ int8_t PCintPort::attachInterrupt(uint8_t arduinoPin, PCIntvoidFuncPtr userFunc,
 	port->lastPinView = port->portInputReg;
 #ifdef DEBUG
 	Serial.print("attachInterrupt- pin: "); Serial.println(arduinoPin, DEC);
+	Serial.print("userFunc: "); Serial.println((int)userFunc);
 #endif
 	// map pin to PCIR register
 	return(port->addPin(arduinoPin, userFunc, mode));
@@ -253,6 +254,11 @@ void PCintPort::detachInterrupt(uint8_t arduinoPin)
 // common code for isr handler. "port" is the PCINT number.
 // there isn't really a good way to back-map ports and masks to pins.
 void PCintPort::PCint() {
+
+
+#ifdef DEBUG
+	Serial.println("In PCint interrupt handler");
+#endif
 
 #ifdef FLASH
 	if (*led_port & led_mask) *led_port &= not_led_mask;

@@ -16,18 +16,19 @@ class PWMReader
  public:
 	 // Sets the pin to be monitored.  Assumes the pin has already
 	 // been configured for input
-	void monitorPin(uint8_t pinNum);
+	void monitorPin(uint8_t pinNum, uint16_t minPulseWidth, uint16_t maxPulseWidth);
 
 	// Gets the number of the monitored pin -- returns INVALID_PIN if 
 	// no pin is currently monitored.
 	uint8_t getMonitoredPin();
 
-	// Gets the width, in milliseconds of the last pulse.
-	uint8_t getLastPulseWidth();
+	// Gets the width, in microseconds of the last pulse.
+	uint16_t getLastPulseWidth();
 
 	static const uint8_t INVALID_PIN = -1;
 
 private:
+	uint8_t monitoredPin;
 };
 
 #endif

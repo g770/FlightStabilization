@@ -20,12 +20,14 @@ static uint8_t allPins[] =
 
 void PinConfiguration::init()
 {
+	//pinMode(TOP_LEFT_MOTOR_PIN, OUTPUT);
+	//pinMode(TOP_RIGHT_MOTOR_PIN, OUTPUT);
+	//pinMode(BOTTOM_LEFT_MOTOR_PIN, OUTPUT);
+	//pinMode(BOTTOM_RIGHT_MOTOR_PIN, OUTPUT);
 
-	for (int i = 0; i < NUM_PINS; i++)
-	{
-		pinMode(allPins[i], OUTPUT);
-		DEBUG_PRINT("PinConfiguration: Configured pin for output - ");
-		DEBUG_PRINTLN(allPins[i]);
-	}
+	pinMode(THROTTLE_PIN, INPUT);
+	pinMode(ROLL_PIN, INPUT);
+	pinMode(PITCH_PIN, INPUT);
+	//pinMode(YAW_PIN, INPUT);
 }
 

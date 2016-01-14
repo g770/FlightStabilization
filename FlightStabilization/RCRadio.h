@@ -37,7 +37,7 @@ class RCRadio
 	void configureChannel(Channel channel, uint8_t pinNum, long scalingMin, long scalingMax);
 
 	// Reads the current value of the given channel
-	long readChannel(Channel channel);
+	bool readChannel(Channel channel, long* result);
 
 private:
 	struct ChannelConfig

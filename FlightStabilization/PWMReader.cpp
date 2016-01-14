@@ -2,8 +2,13 @@
 #include "PWMReader.h"
 #include "PinChangeInt.h"
 
+const uint16_t INVALID_TIME = 0;
 
-const uint8_t INVALID_TIME = -1;
+struct PinConfig
+{
+	uint16_t minPulse;
+	uint16_t maxPulse;
+};
 
 static uint8_t monitoredPin = PWMReader::INVALID_PIN;
 
@@ -13,8 +18,9 @@ static uint8_t monitoredPin = PWMReader::INVALID_PIN;
 // more compact data structures.
 // (Note: tried using vectors here but hit type instantiation issues)
 const uint8_t NUM_PINS = 50;
+static volatile uint16_t pulseTimes[NUM_PINS];
 static volatile unsigned long startTimes[NUM_PINS];
-static volatile unsigned long endTimes[NUM_PINS];
+static PinConfig pinInfo[NUM_PINS];
 
 // Forward declarations
 static void handleFallingInterrupt();
@@ -25,66 +31,76 @@ static void handleFallingInterrupt();
 static void handleRisingInterrupt()
 {
 	uint8_t interruptedPin = PCintPort::arduinoPin;
+	//uint8_t interruptedPin = 2;
 
 	// Make sure the interrupted pin is valid
 	if (interruptedPin < NUM_PINS)
 	{
 		// Save the start time for this pin
 		startTimes[interruptedPin] = micros();
-		endTimes[interruptedPin] = INVALID_TIME;  // There is no valid end time yet
+		pulseTimes[interruptedPin] = INVALID_TIME;
 	}
 
 	// Attach the falling interrupt so we can capture the end time
-	PCintPort::attachInterrupt(monitoredPin, &handleFallingInterrupt, FALLING);
+	PCintPort::attachInterrupt(interruptedPin, &handleFallingInterrupt, FALLING);
+	//attachInterrupt(digitalPinToInterrupt(monitoredPin), &handleFallingInterrupt, FALLING);
 
-	DEBUG_PRINT("PWMReader: Rising interrupt on pin ");
-	DEBUG_PRINTLN(interruptedPin);
+	//DEBUG_PRINT("PWMReader: Rising interrupt on pin ");
+	//DEBUG_PRINTLN(interruptedPin);
 }
 
 static void handleFallingInterrupt()
 {
 	uint8_t interruptedPin = PCintPort::arduinoPin;
+	//uint8_t interruptedPin = 2;
 
 	// Make sure the interrupted pin is valid
 	if (interruptedPin < NUM_PINS)
 	{
-		// Save the end time of the interrupt
-		endTimes[interruptedPin] = micros();
+		// Calculate the pulse width
+		uint16_t pulseWidth = micros() - startTimes[interruptedPin];
+		if (pulseWidth >= pinInfo[interruptedPin].minPulse && pulseWidth <= pinInfo[interruptedPin].maxPulse)
+		{
+			pulseTimes[interruptedPin] = pulseWidth;
+		}
 	}
 
 	// Reattach the handler to capture the next rising interrupt
-	PCintPort::attachInterrupt(monitoredPin, &handleRisingInterrupt, RISING);
+	PCintPort::attachInterrupt(interruptedPin, &handleRisingInterrupt, RISING);
+	//attachInterrupt(digitalPinToInterrupt(monitoredPin), &handleRisingInterrupt, RISING);
 
-	DEBUG_PRINT("PWMReader: Falling interrupt on pin ");
-	DEBUG_PRINTLN(interruptedPin);
+	//DEBUG_PRINT("PWMReader: Falling interrupt on pin ");
+	//DEBUG_PRINTLN(interruptedPin);
 }
 
 
 uint8_t PWMReader::getMonitoredPin()
 {
-	return monitoredPin;
+	return this->monitoredPin;
 }
 
-void PWMReader::monitorPin(uint8_t pinNum)
+void PWMReader::monitorPin(uint8_t pinNum, uint16_t minPulseWidth, uint16_t maxPulseWidth)
 {
-	monitoredPin = pinNum;
+	this->monitoredPin = pinNum;
+
+	PinConfig pConfig;
+	pConfig.minPulse = minPulseWidth;
+	pConfig.maxPulse = maxPulseWidth;
+	pinInfo[pinNum] = pConfig;
 
 	PCintPort::attachInterrupt(monitoredPin, &handleRisingInterrupt, RISING);
+	//attachInterrupt(digitalPinToInterrupt(pinNum), &handleRisingInterrupt, RISING);
 
 	DEBUG_PRINT("PWMReader: monitoring pin ");
 	DEBUG_PRINTLN(monitoredPin);
+	DEBUG_PRINT("PWMReader: user function addr  ");
+	DEBUG_PRINTLN((int)&handleRisingInterrupt);
 }
 
-uint8_t PWMReader::getLastPulseWidth()
+uint16_t PWMReader::getLastPulseWidth()
 {
-	unsigned long endTime = endTimes[this->getMonitoredPin()];
-	unsigned long startTime = startTimes[this->getMonitoredPin()];
 
-	if(endTime != INVALID_TIME && startTime != INVALID_TIME) 
-	{ 
-		// Return the duration of the pulse converted to milliseconds
-		return (uint8_t)(endTime - startTime) / 1000;
-	}
+	return pulseTimes[this->getMonitoredPin()];
 }
 
 

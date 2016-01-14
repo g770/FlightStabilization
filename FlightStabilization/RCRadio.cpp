@@ -10,7 +10,7 @@ void RCRadio::configureChannel(Channel channel, uint8_t pinNum, long scalingMin,
 	// Instantite an object that will handle reading the values of the 
 	// pin and calculate the pulse width
 	PWMReader reader;
-	reader.monitorPin(pinNum);
+	reader.monitorPin(pinNum, MIN_CHANNEL_PULSE_WIDTH, MAX_CHANNEL_PULSE_WIDTH);
 
 	// Store the configuration for this channel
 	ChannelConfig config;
@@ -27,29 +27,33 @@ void RCRadio::configureChannel(Channel channel, uint8_t pinNum, long scalingMin,
 }
 
 
-long RCRadio::readChannel(Channel channel)
+bool RCRadio::readChannel(Channel channel, long* result)
 {
 	ChannelConfig channelConfig = this->pinMonitors[channel];
 
 	// Get the last pulse width measure on the pin for this channel
-	uint8_t lastPulseWidth = channelConfig.monitor.getLastPulseWidth();
+	uint16_t lastPulseWidth = channelConfig.monitor.getLastPulseWidth();
 
-	DEBUG_PRINT("RCRadio: Read pulse width on channel ");
-	DEBUG_PRINT(channel);
-	DEBUG_PRINT(": ");
-	DEBUG_PRINTLN(lastPulseWidth);
-
-	// Map the pulse width to the range for the channel and return it 
-	long result;
-	if (channelConfig.scalingMin == NO_SCALING && channelConfig.scalingMax == NO_SCALING)
+	if (lastPulseWidth >= MIN_CHANNEL_PULSE_WIDTH && lastPulseWidth <= MAX_CHANNEL_PULSE_WIDTH)
 	{
-		result = lastPulseWidth;
-	}
-	else
-	{
-		result = map(lastPulseWidth, MIN_CHANNEL_PULSE_WIDTH, MAX_CHANNEL_PULSE_WIDTH, channelConfig.scalingMin, channelConfig.scalingMax);
+		DEBUG_PRINT("RCRadio: Read pulse width on channel ");
+		DEBUG_PRINT(channel);
+		DEBUG_PRINT(": ");
+		DEBUG_PRINTLN(lastPulseWidth);
+
+		// Map the pulse width to the range for the channel and return it 
+		if (channelConfig.scalingMin == NO_SCALING && channelConfig.scalingMax == NO_SCALING)
+		{
+			*result = lastPulseWidth;
+		}
+		else
+		{
+			*result = map(lastPulseWidth, MIN_CHANNEL_PULSE_WIDTH, MAX_CHANNEL_PULSE_WIDTH, channelConfig.scalingMin, channelConfig.scalingMax);
+		}
+
+		return true;
 	}
 
-	return result;
+	return false;
 }
 

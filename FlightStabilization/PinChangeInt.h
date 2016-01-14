@@ -151,17 +151,17 @@ See the README file for the License and more details.
 #if defined __AVR_ATmega2560__ || defined __AVR_ATmega1280__ || defined __AVR_ATmega1281__ || defined __AVR_ATmega2561__ || defined __AVR_ATmega640__
 #define __USE_PORT_JK
 // Mega does not have PORTA, C or D
-#define NO_PORTA_PINCHANGES
-#define NO_PORTC_PINCHANGES
-#define NO_PORTD_PINCHANGES
+//#define NO_PORTA_PINCHANGES
+//#define NO_PORTC_PINCHANGES
+//#define NO_PORTD_PINCHANGES
 #if ((defined(NO_PORTB_PINCHANGES) && defined(NO_PORTJ_PINCHANGES)) || \
 			(defined(NO_PORTJ_PINCHANGES) && defined(NO_PORTK_PINCHANGES)) || \
 			(defined(NO_PORTK_PINCHANGES) && defined(NO_PORTB_PINCHANGES)))
 #define	INLINE_PCINT inline
 #endif
 #else
-#define NO_PORTJ_PINCHANGES
-#define NO_PORTK_PINCHANGES
+//#define NO_PORTJ_PINCHANGES
+//#define NO_PORTK_PINCHANGES
 #if defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644__)
 #ifndef NO_PORTA_PINCHANGES
 #define __USE_PORT_A
@@ -206,6 +206,8 @@ public:
 #ifdef FLASH
 		ledsetup();
 #endif
+		Serial.print("Configured port: "); Serial.println(index);
+
 	}
 	volatile	uint8_t&		portInputReg;
 	static		int8_t attachInterrupt(uint8_t pin, PCIntvoidFuncPtr userFunc, int mode);
