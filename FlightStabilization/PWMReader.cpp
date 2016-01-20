@@ -6,21 +6,23 @@ const uint16_t INVALID_TIME = 0;
 
 struct PinConfig
 {
-	uint16_t minPulse;
-	uint16_t maxPulse;
+	TimeInterval* minPulse;
+	TimeInterval* maxPulse;
 };
 
 static uint8_t monitoredPin = PWMReader::INVALID_PIN;
 
-// Parallel vectors which store the start and end times indexed
+// Parallel arrays which store the start times and pulse times indexed
 // by pin numbers.  Currently these are hardcoded to a fixed number 
 // of pins and the vectors are sparse.  TODO: Optimize to use 
 // more compact data structures.
 // (Note: tried using vectors here but hit type instantiation issues)
-const uint8_t NUM_PINS = 50;
-static volatile uint16_t pulseTimes[NUM_PINS];
-static volatile unsigned long startTimes[NUM_PINS];
-static PinConfig pinInfo[NUM_PINS];
+const uint8_t NUM_PINS = 25;
+static volatile uint16_t pulseTimes[NUM_PINS] = { INVALID_TIME };
+static volatile unsigned long startTimes[NUM_PINS] = { INVALID_TIME };
+
+// Array of config data for each pin -- used for bounds checking pin data
+static PinConfig* pinInfo[NUM_PINS];
 
 // Forward declarations
 static void handleFallingInterrupt();
@@ -57,11 +59,13 @@ static void handleFallingInterrupt()
 	// Make sure the interrupted pin is valid
 	if (interruptedPin < NUM_PINS)
 	{
-		// Calculate the pulse width
-		uint16_t pulseWidth = micros() - startTimes[interruptedPin];
-		if (pulseWidth >= pinInfo[interruptedPin].minPulse && pulseWidth <= pinInfo[interruptedPin].maxPulse)
+		// Calculate the pulse width -- only store it if the value 
+		// is within the expected range for this pin
+		TimeInterval pulseWidth = TimeInterval::CreateFromMicroseconds(micros() - startTimes[interruptedPin]);
+		
+		if (pulseWidth >= *(pinInfo[interruptedPin]->minPulse) && pulseWidth <= *(pinInfo[interruptedPin]->maxPulse))
 		{
-			pulseTimes[interruptedPin] = pulseWidth;
+			pulseTimes[interruptedPin] = pulseWidth.getMicroSeconds();
 		}
 	}
 
@@ -79,13 +83,13 @@ uint8_t PWMReader::getMonitoredPin()
 	return this->monitoredPin;
 }
 
-void PWMReader::monitorPin(uint8_t pinNum, uint16_t minPulseWidth, uint16_t maxPulseWidth)
+void PWMReader::monitorPin(uint8_t pinNum, TimeInterval minPulseWidth, TimeInterval maxPulseWidth)
 {
 	this->monitoredPin = pinNum;
 
-	PinConfig pConfig;
-	pConfig.minPulse = minPulseWidth;
-	pConfig.maxPulse = maxPulseWidth;
+	PinConfig* pConfig = new PinConfig();
+	pConfig->minPulse = new TimeInterval(minPulseWidth);
+	pConfig->maxPulse = new TimeInterval(maxPulseWidth);
 	pinInfo[pinNum] = pConfig;
 
 	PCintPort::attachInterrupt(monitoredPin, &handleRisingInterrupt, RISING);
@@ -97,10 +101,9 @@ void PWMReader::monitorPin(uint8_t pinNum, uint16_t minPulseWidth, uint16_t maxP
 	DEBUG_PRINTLN((int)&handleRisingInterrupt);
 }
 
-uint16_t PWMReader::getLastPulseWidth()
+TimeInterval PWMReader::getLastPulseWidth()
 {
-
-	return pulseTimes[this->getMonitoredPin()];
+	return TimeInterval::CreateFromMicroseconds(pulseTimes[this->getMonitoredPin()]);
 }
 
 

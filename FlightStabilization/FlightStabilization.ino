@@ -22,6 +22,10 @@ QuadCopter copter;
 
 void setup() {
 
+	DEBUG_PRINTLN("Setup: waiting for esc power up");
+	delay(10000);
+	DEBUG_PRINTLN("Setup: waiting complete");
+
 #ifdef DEBUG_LOG
 	Serial.begin(9600);
 #endif // DEBUG_LOG

@@ -20,7 +20,7 @@ class QuadCopter
 	 void update();
 
  private:
-	 static const int NUM_MOTORS = 4;
+	 static const int NUM_MOTORS = 1;
 
 	 RCRadio receiver;
 	 Motor motors[NUM_MOTORS];

@@ -12,18 +12,24 @@
 class TimeInterval
 {
 
+public:
 	static TimeInterval CreateFromMicroseconds(uint32_t);
 	static TimeInterval CreateFromMilliseconds(uint32_t);
-
- public:
-	// TODO: Fix access
-	 TimeInterval(uint32_t val) : value(val) { }
 
 	 uint32_t getMicroSeconds();
 	 uint32_t getMilliseconds();
 
-private:
-	TimeInterval() { }
+	 friend bool operator<=(TimeInterval& t1, TimeInterval& t2);
+	 friend bool operator>=(TimeInterval& t1, TimeInterval& t2);
+
+	 // TODO: Fix access
+	 TimeInterval(uint32_t val) : value(val) { }
+protected:
+
+	uint32_t getValue();
+
+ private:
+	 TimeInterval() { }
 
 	uint32_t value;
 };

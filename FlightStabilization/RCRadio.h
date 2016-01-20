@@ -20,6 +20,7 @@ class RCRadio
  public:
 	 static const int NO_SCALING = -1;
 
+	 // Channels supported by the radio
 	 enum Channel 
 	 {
 		 THROTTLE = 0,

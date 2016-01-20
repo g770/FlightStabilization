@@ -24,10 +24,10 @@ class Motor
 
 	 // Writes a throttle value to the motor
 	 // throttleValue - A value between 0 and 100
-	 void writeThrottle(uint8_t throttleValue);
+	 void writeThrottle(uint16_t throttleValue);
 
  private:
-	 bool throttleValueValid(uint8_t throttleValue);
+	 bool throttleValueValid(uint16_t throttleValue);
 
 	Servo motorControl;
 };

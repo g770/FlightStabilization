@@ -17,9 +17,10 @@ void QuadCopter::init()
 
 	// Initialize the motors
 	this->motors[TOP_LEFT_MOTOR].init(PinConfiguration::TOP_LEFT_MOTOR_PIN);
-	this->motors[TOP_RIGHT_MOTOR].init(PinConfiguration::TOP_RIGHT_MOTOR_PIN);
-	this->motors[BOTTOM_LEFT_MOTOR].init(PinConfiguration::BOTTOM_LEFT_MOTOR_PIN);
-	this->motors[BOTTOM_RIGHT_MOTOR].init(PinConfiguration::BOTTOM_RIGHT_MOTOR_PIN);
+	this->motors[TOP_LEFT_MOTOR].arm();
+	//this->motors[TOP_RIGHT_MOTOR].init(PinConfiguration::TOP_RIGHT_MOTOR_PIN);
+	//this->motors[BOTTOM_LEFT_MOTOR].init(PinConfiguration::BOTTOM_LEFT_MOTOR_PIN);
+	//this->motors[BOTTOM_RIGHT_MOTOR].init(PinConfiguration::BOTTOM_RIGHT_MOTOR_PIN);
 
 	DEBUG_PRINTLN("Quadcopter: Initialized");
 }
@@ -40,7 +41,7 @@ void QuadCopter::update()
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
 		//DEBUG_PRINT("Quadcopter: Writing motor ");
-		//DEBUG_PRINTLN(i);
+		//DEBUG_PRINTLN(throttleChannel);
 		//this->motors[i].writeThrottle(throttleChannel);
 	}
 
