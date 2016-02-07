@@ -28,7 +28,7 @@ class PWMReader
 	uint8_t getMonitoredPin();
 
 	// Gets the width of the last pulse.
-	TimeInterval getLastPulseWidth();
+	bool getLastPulseWidth(TimeInterval* );
 
 	static const uint8_t INVALID_PIN = -1;
 

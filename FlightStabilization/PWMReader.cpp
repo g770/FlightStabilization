@@ -2,24 +2,31 @@
 #include "PWMReader.h"
 #include "PinChangeInt.h"
 
+// Constant used to mark an invalid type
 const uint16_t INVALID_TIME = 0;
 
+// Holds information associated with a individual pin
 struct PinConfig
 {
 	TimeInterval* minPulse;
 	TimeInterval* maxPulse;
 };
 
-static uint8_t monitoredPin = PWMReader::INVALID_PIN;
-
+// Number of supported pins to monitor
 const uint8_t NUM_PINS = 14;
+
+// Array of last observed pulse widths, indexed by pin number
 static uint16_t pulseTimes[NUM_PINS] = { INVALID_TIME };
+
+// Array of last pulse start times, indexed by pin number
 static uint16_t startTimes[NUM_PINS] = { INVALID_TIME };
 
-static volatile uint16_t changedPinFlags;
-static volatile uint8_t pinState[NUM_PINS];
-static volatile unsigned long timestamp[NUM_PINS];
+// The next three variables are set in the ISR to capture info about the pin change
+static volatile uint16_t changedPinFlags;   // Bit vector of pins that have changed (lowest bit == pin 1)
+static volatile uint8_t pinState[NUM_PINS];  // Array of pin state - HIGH or LOW
+static volatile unsigned long timestamp[NUM_PINS];  // The timestamp of the pin change event
 
+// Bit masks used with the changedPinFlags variable
 static uint16_t flagMasks[NUM_PINS] = { 1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7, 1 << 8, 1 << 9, 1 << 10, 1 << 11, 1 << 12, 1 << 13 };
 
 // Array of config data for each pin -- used for bounds checking pin data
@@ -78,6 +85,7 @@ uint8_t PWMReader::getMonitoredPin()
 	return this->monitoredPin;
 }
 
+
 void PWMReader::monitorPin(uint8_t pinNum, TimeInterval minPulseWidth, TimeInterval maxPulseWidth)
 {
 	this->monitoredPin = pinNum;
@@ -93,21 +101,20 @@ void PWMReader::monitorPin(uint8_t pinNum, TimeInterval minPulseWidth, TimeInter
 	DEBUG_PRINTLN(monitoredPin);
 }
 
-TimeInterval PWMReader::getLastPulseWidth()
+ bool PWMReader::getLastPulseWidth(TimeInterval* outInterval)
 {
 	uint8_t monitoredPin = this->getMonitoredPin();
 
 	uint16_t pulseTime = pulseTimes[monitoredPin];
 
 	TimeInterval pulseWidth = TimeInterval::CreateFromMicroseconds(pulseTime);
-	return pulseWidth;
-
-	/*
 	if (pulseWidth >= *(pinInfo[monitoredPin]->minPulse) && pulseWidth <= *(pinInfo[monitoredPin]->maxPulse))
 	{
+		*outInterval = pulseWidth;
+		return true;
 	}
-	*/
 
+	return false;
 }
 
 

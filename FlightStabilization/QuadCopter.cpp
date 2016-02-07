@@ -11,9 +11,9 @@ const int BOTTOM_RIGHT_MOTOR = 3;
 void QuadCopter::init()
 {
 	// Setup the receiver
-	this->receiver.configureChannel(RCRadio::THROTTLE, PinConfiguration::THROTTLE_PIN, RCRadio::NO_SCALING, RCRadio::NO_SCALING);
-	this->receiver.configureChannel(RCRadio::ROLL, PinConfiguration::ROLL_PIN, RCRadio::NO_SCALING, RCRadio::NO_SCALING);
-	this->receiver.configureChannel(RCRadio::PITCH, PinConfiguration::PITCH_PIN, RCRadio::NO_SCALING, RCRadio::NO_SCALING);
+	this->receiver.configureChannel(RCRadio::THROTTLE, PinConfiguration::THROTTLE_PIN, Motor::MIN_THROTTLE_IN, Motor::MAX_THROTTLE_IN);
+	//this->receiver.configureChannel(RCRadio::ROLL, PinConfiguration::ROLL_PIN, RCRadio::NO_SCALING, RCRadio::NO_SCALING);
+	//this->receiver.configureChannel(RCRadio::PITCH, PinConfiguration::PITCH_PIN, RCRadio::NO_SCALING, RCRadio::NO_SCALING);
 
 	// Initialize the motors
 	this->motors[TOP_LEFT_MOTOR].init(PinConfiguration::TOP_LEFT_MOTOR_PIN);
@@ -27,22 +27,28 @@ void QuadCopter::init()
 
 void QuadCopter::update()
 {
+	// TODO: Bit of a hack, calling directly into the pwmreader from here
+	PWMReader::update();
+
 	// Read the throttle channel
 	long throttleChannel;
-	this->receiver.readChannel(RCRadio::THROTTLE, &throttleChannel);
+	bool result = this->receiver.readChannel(RCRadio::THROTTLE, &throttleChannel);
 
-	long rollChannel;
-	this->receiver.readChannel(RCRadio::ROLL, &rollChannel);
+	//long rollChannel;
+	//this->receiver.readChannel(RCRadio::ROLL, &rollChannel);
 
-	long pitchChannel;	
-	this->receiver.readChannel(RCRadio::PITCH, &pitchChannel);
+	//long pitchChannel;	
+	//this->receiver.readChannel(RCRadio::PITCH, &pitchChannel);
 
 	// Write the new throttle channel value to the motors
-	for (int i = 0; i < NUM_MOTORS; i++)
+	if (result)
 	{
-		//DEBUG_PRINT("Quadcopter: Writing motor ");
-		//DEBUG_PRINTLN(throttleChannel);
-		//this->motors[i].writeThrottle(throttleChannel);
+		for (int i = 0; i < NUM_MOTORS; i++)
+		{
+			//DEBUG_PRINT("Quadcopter: Writing motor ");
+			//DEBUG_PRINTLN(throttleChannel);
+			this->motors[i].writeThrottle(throttleChannel);
+		}
 	}
 
 }

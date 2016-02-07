@@ -22,14 +22,13 @@ public:
 	 friend bool operator<=(TimeInterval& t1, TimeInterval& t2);
 	 friend bool operator>=(TimeInterval& t1, TimeInterval& t2);
 
-	 // TODO: Fix access
+	 TimeInterval() { }
 	 TimeInterval(uint32_t val) : value(val) { }
 protected:
 
 	uint32_t getValue();
 
  private:
-	 TimeInterval() { }
 
 	uint32_t value;
 };
