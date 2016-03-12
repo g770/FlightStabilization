@@ -35,41 +35,51 @@ static PinConfig* pinInfo[NUM_PINS];
 void PWMReader::update()
 {
 	// Copy the volatile variable describing which pins changed
-	uint8_t changedPins = changedPinFlags;
+	uint16_t changedPins = changedPinFlags;
 
 	// Iterate over the bit flags and see which pins need to be processed
-	for (uint8_t pinNum = 0; pinNum < NUM_PINS; pinNum++)
+	if (changedPins > 0)
 	{
-		if (changedPinFlags & flagMasks[pinNum])
+		for (uint8_t pinNum = 0; pinNum < NUM_PINS; pinNum++)
 		{
-			// Copy the volatile pinstate and timestamp 
-			noInterrupts();
-			uint8_t pState = pinState[pinNum];
-			unsigned long ts = timestamp[pinNum];
-			interrupts();
-
-
-			// If the pin state is high, a pulse is starting.  Save the 
-			// start time and continue
-			if (pState == HIGH)
+			if (changedPins & flagMasks[pinNum])
 			{
-				startTimes[pinNum] = ts;
-				pulseTimes[pinNum] = INVALID_TIME;
+				// Copy the volatile pinstate and timestamp 
+				noInterrupts();
+				uint8_t pState = pinState[pinNum];
+				unsigned long ts = timestamp[pinNum];
+				interrupts();
+
+				// If the pin state is high, a pulse is starting.  Save the 
+				// start time and continue
+				if (pState == HIGH)
+				{
+					startTimes[pinNum] = ts;
+					pulseTimes[pinNum] = INVALID_TIME;
+				}
+				else
+				{
+					// A pulse ended, calculate the time
+					pulseTimes[pinNum] = ts - startTimes[pinNum];
+					//DEBUG_PRINT("Pulse time: ");
+					//DEBUG_PRINTLN(pulseTimes[pinNum]);
+				}
+
+				// Clear the flag in the original bitmask
+				//changedPinFlags = flagMasks[pinNum]
 			}
-			else
-			{
-				// A pulse ended, calculate the time
-				pulseTimes[pinNum] = ts - startTimes[pinNum];
-			}
+
 		}
+
+		changedPinFlags = 0;
 	}
 }
 
 
-static void handlePinChangeInterrupt()
+static inline void handlePinChangeInterrupt(uint16_t interruptedPin)
 {
 	// Set bitmask indicating which pin has changed.
-	uint16_t interruptedPin = PCintPort::arduinoPin;
+	//uint16_t interruptedPin = PCintPort::arduinoPin;
 	changedPinFlags |= flagMasks[interruptedPin];
 
 	// Save the state of the pin (high/low)
@@ -79,6 +89,25 @@ static void handlePinChangeInterrupt()
 	timestamp[interruptedPin] = micros();
 }
 
+static void handlePin1ChangeInterrupt()
+{
+	handlePinChangeInterrupt(1);
+}
+
+static void handlePin2ChangeInterrupt()
+{
+	handlePinChangeInterrupt(2);
+}
+
+static void handlePin3ChangeInterrupt()
+{
+	handlePinChangeInterrupt(3);
+}
+
+static void handlePin5ChangeInterrupt()
+{
+	handlePinChangeInterrupt(5);
+}
 
 uint8_t PWMReader::getMonitoredPin()
 {
@@ -95,7 +124,8 @@ void PWMReader::monitorPin(uint8_t pinNum, TimeInterval minPulseWidth, TimeInter
 	pConfig->maxPulse = new TimeInterval(maxPulseWidth);
 	pinInfo[pinNum] = pConfig;
 
-	PCintPort::attachInterrupt(monitoredPin, &handlePinChangeInterrupt, CHANGE);
+	//PCintPort::attachInterrupt(monitoredPin, &handlePinChangeInterrupt, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(pinNum)), &handlePinChangeInterrupt, CHANGE);
 
 	DEBUG_PRINT("PWMReader: monitoring pin ");
 	DEBUG_PRINTLN(monitoredPin);
