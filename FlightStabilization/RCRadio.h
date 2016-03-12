@@ -9,7 +9,7 @@
 	#include "WProgram.h"
 #endif
 
-#include <StandardCplusplus.h>
+//#include <StandardCplusplus.h>
 #include "PWMReader.h"
 
 // Class that represents an RC radio.  It monitors pin inputs 

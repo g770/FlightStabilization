@@ -24,9 +24,6 @@
     <ClInclude Include="PWMReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PinChangeInt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RCRadio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -48,9 +45,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PWMReader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PinChangeInt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RCRadio.cpp">

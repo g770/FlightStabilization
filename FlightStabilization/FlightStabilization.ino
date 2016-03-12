@@ -14,9 +14,9 @@
 
 // the setup function runs once when you press reset or power the board
 #include "RCRadio.h"
-#include <utility.h>
-#include <unwind-cxx.h>
-#include <system_configuration.h>
+//#include <utility.h>
+//#include <unwind-cxx.h>
+//#include <system_configuration.h>
 
 QuadCopter copter;
 

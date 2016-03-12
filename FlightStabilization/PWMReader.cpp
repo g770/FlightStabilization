@@ -1,6 +1,6 @@
 #include "CommonDefs.h"
 #include "PWMReader.h"
-#include "PinChangeInt.h"
+//#include "PinChangeInt.h"
 
 // Constant used to mark an invalid type
 const uint16_t INVALID_TIME = 0;
@@ -125,7 +125,7 @@ void PWMReader::monitorPin(uint8_t pinNum, TimeInterval minPulseWidth, TimeInter
 	pinInfo[pinNum] = pConfig;
 
 	//PCintPort::attachInterrupt(monitoredPin, &handlePinChangeInterrupt, CHANGE);
-	attachInterrupt(digitalPinToInterrupt(pinNum)), &handlePinChangeInterrupt, CHANGE);
+	//attachInterrupt(digitalPinToInterrupt(pinNum)), &handlePinChangeInterrupt, CHANGE);
 
 	DEBUG_PRINT("PWMReader: monitoring pin ");
 	DEBUG_PRINTLN(monitoredPin);
