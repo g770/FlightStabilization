@@ -2,6 +2,7 @@
 #include "CommonDefs.h"
 
 // The min and max pulse widths that can be received on a channel
+// The radio endpoints for each channel should be calibrated to send these as min and max values
 // TODO: make const
 TimeInterval MIN_CHANNEL_PULSE_WIDTH = TimeInterval::CreateFromMicroseconds(1000);
 TimeInterval MAX_CHANNEL_PULSE_WIDTH = TimeInterval::CreateFromMicroseconds(2000);
