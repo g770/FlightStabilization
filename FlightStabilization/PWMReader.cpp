@@ -50,6 +50,9 @@ void PWMReader::update()
 	// Copy the volatile variable describing which pins changed
 	uint16_t changedPins = changedPinFlags;
 
+	// Clear the original bitmask and work with our copy
+	changedPinFlags = 0;
+
 	// Iterate over the bit flags and see which pins need to be processed
 	if (changedPins > 0)
 	{
@@ -77,14 +80,9 @@ void PWMReader::update()
 					//DEBUG_PRINT("Pulse time: ");
 					//DEBUG_PRINTLN(pulseTimes[pinNum]);
 				}
-
-				// Clear the flag in the original bitmask
-				//changedPinFlags = flagMasks[pinNum]
 			}
 
 		}
-
-		changedPinFlags = 0;
 	}
 }
 
