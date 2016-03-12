@@ -1,6 +1,5 @@
 #include "CommonDefs.h"
 #include "PWMReader.h"
-//#include "PinChangeInt.h"
 
 // Constant used to mark an invalid type
 const uint16_t INVALID_TIME = 0;
@@ -12,8 +11,9 @@ struct PinConfig
 	TimeInterval* maxPulse;
 };
 
-// Number of supported pins to monitor
-const uint8_t NUM_PINS = 14;
+// Max number of pins to monitor -- note, not all pins are supported in this range since
+// the Zero doesn't support external interrupts on pin 4.
+const uint8_t NUM_PINS = 8;
 
 // Array of last observed pulse widths, indexed by pin number
 static uint16_t pulseTimes[NUM_PINS] = { INVALID_TIME };
@@ -27,10 +27,23 @@ static volatile uint8_t pinState[NUM_PINS];  // Array of pin state - HIGH or LOW
 static volatile unsigned long timestamp[NUM_PINS];  // The timestamp of the pin change event
 
 // Bit masks used with the changedPinFlags variable
-static uint16_t flagMasks[NUM_PINS] = { 1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7, 1 << 8, 1 << 9, 1 << 10, 1 << 11, 1 << 12, 1 << 13 };
+static uint16_t flagMasks[NUM_PINS] = { 1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7 };
 
 // Array of config data for each pin -- used for bounds checking pin data
 static PinConfig* pinInfo[NUM_PINS];
+
+// Forward declaration of the ISR functions for each pin
+static void handlePin1ChangeInterrupt();
+static void handlePin2ChangeInterrupt();
+static void handlePin3ChangeInterrupt();
+static void handlePin5ChangeInterrupt();
+static void handlePin6ChangeInterrupt();
+static void handlePin7ChangeInterrupt();
+
+// Map of pin number to the ISR for that pin -- note pins 0 and 4 are not supported.
+typedef void(*isr_ptr_t)();
+static isr_ptr_t interruptRoutines[] = { 0, handlePin1ChangeInterrupt, handlePin2ChangeInterrupt, handlePin3ChangeInterrupt, 0, handlePin5ChangeInterrupt, handlePin6ChangeInterrupt, handlePin7ChangeInterrupt };
+
 
 void PWMReader::update()
 {
@@ -79,7 +92,6 @@ void PWMReader::update()
 static inline void handlePinChangeInterrupt(uint16_t interruptedPin)
 {
 	// Set bitmask indicating which pin has changed.
-	//uint16_t interruptedPin = PCintPort::arduinoPin;
 	changedPinFlags |= flagMasks[interruptedPin];
 
 	// Save the state of the pin (high/low)
@@ -109,6 +121,17 @@ static void handlePin5ChangeInterrupt()
 	handlePinChangeInterrupt(5);
 }
 
+static void handlePin6ChangeInterrupt()
+{
+	handlePinChangeInterrupt(6);
+}
+
+static void handlePin7ChangeInterrupt()
+{
+	handlePinChangeInterrupt(7);
+}
+
+
 uint8_t PWMReader::getMonitoredPin()
 {
 	return this->monitoredPin;
@@ -124,8 +147,7 @@ void PWMReader::monitorPin(uint8_t pinNum, TimeInterval minPulseWidth, TimeInter
 	pConfig->maxPulse = new TimeInterval(maxPulseWidth);
 	pinInfo[pinNum] = pConfig;
 
-	//PCintPort::attachInterrupt(monitoredPin, &handlePinChangeInterrupt, CHANGE);
-	//attachInterrupt(digitalPinToInterrupt(pinNum)), &handlePinChangeInterrupt, CHANGE);
+	attachInterrupt(pinNum, interruptRoutines[pinNum], CHANGE);
 
 	DEBUG_PRINT("PWMReader: monitoring pin ");
 	DEBUG_PRINTLN(monitoredPin);

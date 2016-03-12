@@ -38,6 +38,9 @@ bool RCRadio::readChannel(Channel channel, long* result)
 
 	if (channelReadResult)
 	{
+		//DEBUG_PRINT("Pulse width: ");
+		//DEBUG_PRINTLN(lastPulseWidth.getMicroSeconds());
+
 		// Map the pulse width to the range for the channel and return it 
 		if (channelConfig.scalingMin == NO_SCALING && channelConfig.scalingMax == NO_SCALING)
 		{

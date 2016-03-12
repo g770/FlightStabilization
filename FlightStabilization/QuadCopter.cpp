@@ -47,7 +47,7 @@ void QuadCopter::update()
 		{
 			//DEBUG_PRINT("Quadcopter: Writing motor ");
 			//DEBUG_PRINTLN(throttleChannel);
-			this->motors[i].writeThrottle(throttleChannel);
+			//this->motors[i].writeThrottle(throttleChannel);
 		}
 	}
 
