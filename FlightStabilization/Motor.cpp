@@ -43,15 +43,16 @@ bool Motor::writeThrottle(uint16_t throttleValue)
 	int microsecs = map(throttleValue, MIN_THROTTLE_IN, MAX_THROTTLE_IN, MIN_THROTTLE, MAX_THROTTLE);
 
 
-	DEBUG_PRINT("Motor: Write throttle value ");
-	DEBUG_PRINTLN(microsecs);
+	//DEBUG_PRINT("Motor: Write throttle value ");
+	//DEBUG_PRINTLN(microsecs);
 
 	this->motorControl.writeMicroseconds(microsecs);
-	
+	this->currentThrottle = throttleValue;
+
 	return true;
 }
 
-bool Motor::throttleValueValid(uint16_t throttleValue)
+inline bool Motor::throttleValueValid(uint16_t throttleValue)
 {
 	if (throttleValue < MIN_THROTTLE_IN || throttleValue > MAX_THROTTLE_IN)
 	{

@@ -14,25 +14,28 @@
 class Motor
 {
 
- public:
-	 static const uint16_t MIN_THROTTLE_IN = 0;
-	 static const uint16_t MAX_THROTTLE_IN = 1000;
+public:
+	static const uint16_t MIN_THROTTLE_IN = 0;
+	static const uint16_t MAX_THROTTLE_IN = 1000;
 
-	 // Initialize the motor class
-	 // pin -- The pin the motor is connected to
-	 void init(uint8_t pin);
-	 
-	 // Arms the motor
-	 void arm();
+	// Initialize the motor class
+	// pin -- The pin the motor is connected to
+	void init(uint8_t pin);
 
-	 // Writes a throttle value to the motor
-	 // throttleValue - A value between 0 and 1000
-	 // Returns true if write was successful, false in a failed write or invalid value
-	 bool writeThrottle(uint16_t throttleValue);
+	// Arms the motor
+	void arm();
+
+	// Writes a throttle value to the motor
+	// throttleValue - A value between 0 and 1000
+	// Returns true if write was successful, false in a failed write or invalid value
+	bool writeThrottle(uint16_t throttleValue);
+
+	uint16_t getCurrentThrottle() { return this->currentThrottle; }
 
  private:
 	 bool throttleValueValid(uint16_t throttleValue);
 
+	uint16_t currentThrottle;
 	Servo motorControl;
 };
 

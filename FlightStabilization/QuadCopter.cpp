@@ -41,14 +41,37 @@ void QuadCopter::update()
 	//this->receiver.readChannel(RCRadio::PITCH, &pitchChannel);
 
 	// Write the new throttle channel value to the motors
-	if (result)
+	for (int i = 0; i < NUM_MOTORS; i++)
 	{
-		for (int i = 0; i < NUM_MOTORS; i++)
+		uint16_t currentThrottle = this->motors[i].getCurrentThrottle();
+
+		// Very simple control loop.  First read the throttle channel, that is the desired
+		// state.  Then read the curren throttle value and calculate how to modify the current
+		// throttle to move it toward the desired state (the throttle channel value)
+		int step;
+		if (result)
 		{
-			//DEBUG_PRINT("Quadcopter: Writing motor ");
-			//DEBUG_PRINTLN(throttleChannel);
-			//this->motors[i].writeThrottle(throttleChannel);
+			if (throttleChannel > currentThrottle) {
+				step = 1;
+			}
+			else if (currentThrottle == 0)
+			{
+				step = 0;
+			}
+			else
+			{
+				step = -1;
+			}
 		}
+		else
+		{
+			step = 0;
+		}
+
+		uint16_t newThrottle = currentThrottle + step;
+		//DEBUG_PRINT("Quadcopter: Writing motor ");
+		//DEBUG_PRINTLN(newThrottle);
+		this->motors[i].writeThrottle(newThrottle);
 	}
 
 }

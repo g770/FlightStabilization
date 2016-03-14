@@ -24,7 +24,7 @@ void setup() {
 	DEBUG_PRINTLN("Setup: waiting complete");
 
 #ifdef DEBUG_LOG
-	Serial.begin(9600);
+	Serial.begin(115200);
 #endif // DEBUG_LOG
 
 	// Setup pins

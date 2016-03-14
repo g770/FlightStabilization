@@ -19,12 +19,12 @@ const uint8_t NUM_PINS = 8;
 static uint16_t pulseTimes[NUM_PINS] = { INVALID_TIME };
 
 // Array of last pulse start times, indexed by pin number
-static uint16_t startTimes[NUM_PINS] = { INVALID_TIME };
+static uint32_t startTimes[NUM_PINS] = { INVALID_TIME };
 
 // The next three variables are set in the ISR to capture info about the pin change
-static volatile uint16_t changedPinFlags;   // Bit vector of pins that have changed (lowest bit == pin 1)
-static volatile uint8_t pinState[NUM_PINS];  // Array of pin state - HIGH or LOW
-static volatile unsigned long timestamp[NUM_PINS];  // The timestamp of the pin change event
+static volatile uint8_t changedPinFlags;   // Bit vector of pins that have changed (lowest bit == pin 1)
+static volatile int pinState[NUM_PINS];  // Array of pin state - HIGH or LOW
+static volatile uint32_t timestamp[NUM_PINS];  // The timestamp of the pin change event
 
 // Bit masks used with the changedPinFlags variable
 static uint16_t flagMasks[NUM_PINS] = { 1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7 };
@@ -48,10 +48,17 @@ static isr_ptr_t interruptRoutines[] = { 0, handlePin1ChangeInterrupt, handlePin
 void PWMReader::update()
 {
 	// Copy the volatile variable describing which pins changed
-	uint16_t changedPins = changedPinFlags;
+	int pinStateLocal[NUM_PINS];
+	uint32_t timestampLocal[NUM_PINS];
 
-	// Clear the original bitmask and work with our copy
-	changedPinFlags = 0;
+	noInterrupts();
+	uint8_t changedPins = changedPinFlags;
+	for (uint8_t pinNum = 0; pinNum < NUM_PINS; pinNum++)
+	{
+		pinStateLocal[pinNum] = pinState[pinNum];
+		timestampLocal[pinNum] = timestamp[pinNum];
+	}
+	interrupts();
 
 	// Iterate over the bit flags and see which pins need to be processed
 	if (changedPins > 0)
@@ -61,10 +68,10 @@ void PWMReader::update()
 			if (changedPins & flagMasks[pinNum])
 			{
 				// Copy the volatile pinstate and timestamp 
-				noInterrupts();
-				uint8_t pState = pinState[pinNum];
-				unsigned long ts = timestamp[pinNum];
-				interrupts();
+				//noInterrupts();
+				int pState = pinStateLocal[pinNum];
+				uint32_t ts = timestampLocal[pinNum];
+				//interrupts();
 
 				// If the pin state is high, a pulse is starting.  Save the 
 				// start time and continue
@@ -77,9 +84,14 @@ void PWMReader::update()
 				{
 					// A pulse ended, calculate the time
 					pulseTimes[pinNum] = ts - startTimes[pinNum];
-					//DEBUG_PRINT("Pulse time: ");
-					//DEBUG_PRINTLN(pulseTimes[pinNum]);
+					if (pulseTimes[pinNum] > 2100) {
+						DEBUG_PRINT("long pulse: ");
+						DEBUG_PRINTLN(pulseTimes[pinNum]);
+					}
 				}
+
+				// Clear the flag now that the change on this pin has been processed
+				changedPinFlags ^= flagMasks[pinNum];
 			}
 
 		}
@@ -89,14 +101,18 @@ void PWMReader::update()
 
 static inline void handlePinChangeInterrupt(uint16_t interruptedPin)
 {
-	// Set bitmask indicating which pin has changed.
-	changedPinFlags |= flagMasks[interruptedPin];
+	// Only process the interrupt if the flag has been cleared
+	if (!(changedPinFlags & flagMasks[interruptedPin]))
+	{
+		// Set bitmask indicating which pin has changed.
+		changedPinFlags |= flagMasks[interruptedPin];
 
-	// Save the state of the pin (high/low)
-	pinState[interruptedPin] = digitalRead(interruptedPin);
+		// Save the state of the pin (high/low)
+		pinState[interruptedPin] = digitalRead(interruptedPin);
 
-	// Save the timestamp of the change
-	timestamp[interruptedPin] = micros();
+		// Save the timestamp of the change
+		timestamp[interruptedPin] = micros();
+	}
 }
 
 static void handlePin1ChangeInterrupt()
@@ -130,7 +146,7 @@ static void handlePin7ChangeInterrupt()
 }
 
 
-uint8_t PWMReader::getMonitoredPin()
+inline uint8_t PWMReader::getMonitoredPin()
 {
 	return this->monitoredPin;
 }
