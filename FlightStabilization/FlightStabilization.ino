@@ -4,6 +4,7 @@
  Author:	dwelzel
 */
 
+#include "Math.h"
 #include "ChannelConfig.h"
 #include <Wire.h>
 #include "TimeInterval.h"

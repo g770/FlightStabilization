@@ -2,6 +2,7 @@
 #include "QuadCopter.h"
 #include "PinConfiguration.h"
 #include "ChannelConfig.h"
+#include "Math.h"
 
 // Constants defining the motor positions
 const int TOP_LEFT_MOTOR = 0;
@@ -42,11 +43,6 @@ void QuadCopter::init()
 }
 
 
-static double radianToDegrees(double rad)
-{
-	return rad * 57.295779513;
-}
-
 const double THROTTLE_P = 1;
 const double ROLL_P = 1;
 const double PITCH_P = 1;
@@ -61,11 +57,11 @@ void QuadCopter::update()
 	imu::Vector<3> accelerometer = this->imu.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
 
 	DEBUG_PRINT("Accel (x, y, z): ");
-	DEBUG_PRINT(radianToDegrees(accelerometer.x()));
+	DEBUG_PRINT(Math::radianToDegrees(accelerometer.x()));
 	DEBUG_PRINT(", ");
-	DEBUG_PRINT(radianToDegrees(accelerometer.y()));
+	DEBUG_PRINT(Math::radianToDegrees(accelerometer.y()));
 	DEBUG_PRINT(", ");
-	DEBUG_PRINTLN(radianToDegrees(accelerometer.z()));
+	DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.z()));
 
 
 	// Read the throttle channel
@@ -88,7 +84,7 @@ void QuadCopter::update()
 
 	// TODO: Getting thoughts in code, need to make sure signs are aligned the right way
 	// Assume: positive value is right roll
-	double rollError = rollChannel - radianToDegrees(accelerometer.x());
+	double rollError = rollChannel - Math::radianToDegrees(accelerometer.x());
 	double correction = abs(rollError) * ROLL_P;
 
 	// If error is positive, accelerate to the right, otherwise left
