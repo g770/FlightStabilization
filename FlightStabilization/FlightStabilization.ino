@@ -4,6 +4,7 @@
  Author:	dwelzel
 */
 
+#include "ChannelConfig.h"
 #include <Wire.h>
 #include "TimeInterval.h"
 #include "PinConfiguration.h"
