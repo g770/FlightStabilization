@@ -10,6 +10,16 @@ const int BOTTOM_RIGHT_MOTOR = 3;
 
 void QuadCopter::init()
 {
+	if (!this->imu.begin())
+	{
+		DEBUG_PRINTLN("Failed to initialize IMU");
+		while (1);
+	}
+	else
+	{
+		DEBUG_PRINTLN("IMU Initialized");
+	}
+
 	// Setup the receiver
 	this->receiver.configureChannel(RCRadio::THROTTLE, PinConfiguration::THROTTLE_PIN, Motor::MIN_THROTTLE_IN, Motor::MAX_THROTTLE_IN);
 	//this->receiver.configureChannel(RCRadio::ROLL, PinConfiguration::ROLL_PIN, RCRadio::NO_SCALING, RCRadio::NO_SCALING);

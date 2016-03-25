@@ -11,6 +11,8 @@
 
 #include "RCRadio.h"
 #include "Motor.h"
+#include "Adafruit_Sensor.h"
+#include "Adafruit_BNO055.h"
 
 class QuadCopter
 {
@@ -24,6 +26,7 @@ class QuadCopter
 
 	 RCRadio receiver;
 	 Motor motors[NUM_MOTORS];
+	 Adafruit_BNO055 imu;
 };
 
 

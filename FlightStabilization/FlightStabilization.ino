@@ -4,6 +4,7 @@
  Author:	dwelzel
 */
 
+#include <Wire.h>
 #include "TimeInterval.h"
 #include "PinConfiguration.h"
 #include "QuadCopter.h"
