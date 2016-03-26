@@ -76,10 +76,13 @@
   <ItemGroup>
     <ClInclude Include="Adafruit_BNO055.h" />
     <ClInclude Include="Adafruit_Sensor.h" />
+    <ClInclude Include="ChannelConfig.h" />
     <ClInclude Include="CommonDefs.h" />
     <ClInclude Include="imumaths.h" />
+    <ClInclude Include="Math.h" />
     <ClInclude Include="matrix.h" />
     <ClInclude Include="Motor.h" />
+    <ClInclude Include="PID.h" />
     <ClInclude Include="PinConfiguration.h" />
     <ClInclude Include="PWMReader.h" />
     <ClInclude Include="QuadCopter.h" />
@@ -91,7 +94,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Adafruit_BNO055.cpp" />
+    <ClCompile Include="ChannelConfig.cpp" />
+    <ClCompile Include="Math.cpp" />
     <ClCompile Include="Motor.cpp" />
+    <ClCompile Include="PID.cpp" />
     <ClCompile Include="PinConfiguration.cpp" />
     <ClCompile Include="PWMReader.cpp" />
     <ClCompile Include="QuadCopter.cpp" />

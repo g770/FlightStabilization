@@ -4,6 +4,7 @@
  Author:	dwelzel
 */
 
+#include "PID.h"
 #include "Math.h"
 #include "ChannelConfig.h"
 #include <Wire.h>

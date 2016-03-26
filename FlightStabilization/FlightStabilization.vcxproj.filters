@@ -60,6 +60,15 @@
     <ClInclude Include="Adafruit_Sensor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ChannelConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PID.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PWMReader.cpp">
@@ -81,6 +90,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Adafruit_BNO055.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ChannelConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Math.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PID.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

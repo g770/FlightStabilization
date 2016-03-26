@@ -22,6 +22,12 @@ void QuadCopter::init()
 		DEBUG_PRINTLN("IMU Initialized");
 	}
 
+	// Setup PID controllers
+	this->throttlePID.setPIDConstants(1, 1, 1);
+	this->rollPID.setPIDConstants(1, 1, 1);
+	this->pitchPID.setPIDConstants(1, 1, 1);
+	this->yawPID.setPIDConstants(1, 1, 1);
+
 	// Setup the receiver
 	this->receiver.configureChannel(RCRadio::THROTTLE, PinConfiguration::THROTTLE_PIN, 
 		ChannelConfig::getChannelMin(RCRadio::THROTTLE), ChannelConfig::getChannelMax(RCRadio::THROTTLE));
@@ -43,15 +49,18 @@ void QuadCopter::init()
 }
 
 
-const double THROTTLE_P = 1;
-const double ROLL_P = 1;
-const double PITCH_P = 1;
-const double YAW_P = 1;
-
 void QuadCopter::update()
 {
+	// Core Control loop
+
 	// TODO: Bit of a hack, calling directly into the pwmreader from here
 	PWMReader::update();
+
+	// Read current motor values
+	uint16_t newTopLeftMotor = this->motors[TOP_LEFT_MOTOR].getCurrentThrottle();
+	uint16_t newBottomLeftMotor = this->motors[BOTTOM_LEFT_MOTOR].getCurrentThrottle();
+	uint16_t newTopRightMotor = this->motors[TOP_RIGHT_MOTOR].getCurrentThrottle();
+	uint16_t newBottomRightMotor = this->motors[BOTTOM_RIGHT_MOTOR].getCurrentThrottle();
 
 	// Read the accelerometer
 	imu::Vector<3> accelerometer = this->imu.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
@@ -63,79 +72,128 @@ void QuadCopter::update()
 	DEBUG_PRINT(", ");
 	DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.z()));
 
+	// Process each channel to calculate the new motor values
+	processThottleChannel(newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+	processRollChannel(accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+	processPitchChannel(accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+	processYawChannel(accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 
-	// Read the throttle channel
+	// Write the new motor values
+	this->motors[TOP_LEFT_MOTOR].writeThrottle(newTopLeftMotor);
+	this->motors[BOTTOM_LEFT_MOTOR].writeThrottle(newBottomLeftMotor);
+	this->motors[TOP_RIGHT_MOTOR].writeThrottle(newTopRightMotor);
+	this->motors[BOTTOM_RIGHT_MOTOR].writeThrottle(newBottomRightMotor);
+}
+
+void QuadCopter::processThottleChannel(uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+{
 	long throttleChannel;
 	bool result = this->receiver.readChannel(RCRadio::THROTTLE, &throttleChannel);
 
-	long rollChannel;
-	this->receiver.readChannel(RCRadio::ROLL, &rollChannel);
-
-	long pitchChannel;	
-	this->receiver.readChannel(RCRadio::PITCH, &pitchChannel);
-
-	long yawChannel;
-	this->receiver.readChannel(RCRadio::YAW, &yawChannel);
-
-	uint16_t newTopLeftMotor = this->motors[TOP_LEFT_MOTOR].getCurrentThrottle();
-	uint16_t newBottomLeftMotor = this->motors[BOTTOM_LEFT_MOTOR].getCurrentThrottle();
-	uint16_t newTopRightMotor = this->motors[TOP_RIGHT_MOTOR].getCurrentThrottle();
-	uint16_t newBottomRightMotor = this->motors[BOTTOM_RIGHT_MOTOR].getCurrentThrottle();
-
-	// TODO: Getting thoughts in code, need to make sure signs are aligned the right way
-	// Assume: positive value is right roll
-	double rollError = rollChannel - Math::radianToDegrees(accelerometer.x());
-	double correction = abs(rollError) * ROLL_P;
-
-	// If error is positive, accelerate to the right, otherwise left
-	if (rollError > 0)
+	if (result)
 	{
-		newTopLeftMotor += correction;
-		newBottomLeftMotor += correction;
-		newTopRightMotor -= correction;
-		newBottomRightMotor -= correction;
+		// Calc correction once and apply to all
+		double correction;
+		double error;
+		this->throttlePID.calculateCorrection(topLeftOut, throttleChannel, error, correction);
+
+		topLeftOut += correction;
+		bottomLeftOut += correction;
+		topRightOut += correction;
+		bottomRightOut += correction;
 	}
-	else
-	{
-		newTopLeftMotor -= correction;
-		newBottomLeftMotor -= correction;
-		newTopRightMotor += correction;
-		newBottomRightMotor += correction;
-	}
+}
 
-	// Write the new throttle channel value to the motors
-	for (int i = 0; i < NUM_MOTORS; i++)
-	{
-		uint16_t currentThrottle = this->motors[i].getCurrentThrottle();
+void QuadCopter::processPitchChannel(imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+{
+	long pitchChannel;
+	bool result = this->receiver.readChannel(RCRadio::PITCH, &pitchChannel);
 
-		// Very simple control loop.  First read the throttle channel, that is the desired
-		// state.  Then read the curren throttle value and calculate how to modify the current
-		// throttle to move it toward the desired state (the throttle channel value)
-		int step;
-		if (result)
+	if (result)
+	{
+		// TODO: Make sure signs are aligned the right way
+		// Assume: positive value is right roll
+		double correction;
+		double error;
+		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.y()), pitchChannel, error, correction);
+
+		// If error is positive, accelerate forward
+		if (error > 0)
 		{
-			if (throttleChannel > currentThrottle) {
-				step = 1;
-			}
-			else if (currentThrottle == 0)
-			{
-				step = 0;
-			}
-			else
-			{
-				step = -1;
-			}
+			topLeftOut -= correction;
+			bottomLeftOut += correction;
+			topRightOut -= correction;
+			bottomRightOut += correction;
 		}
 		else
 		{
-			step = 0;
+			topLeftOut += correction;
+			bottomLeftOut -= correction;
+			topRightOut += correction;
+			bottomRightOut -= correction;
 		}
-
-		uint16_t newThrottle = currentThrottle + step;
-		//DEBUG_PRINT("Quadcopter: Writing motor ");
-		//DEBUG_PRINTLN(newThrottle);
-		this->motors[i].writeThrottle(newThrottle);
 	}
+}
 
+void QuadCopter::processRollChannel(imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+{
+	long rollChannel;
+	bool result = this->receiver.readChannel(RCRadio::ROLL, &rollChannel);
+
+	if (result)
+	{
+		// TODO: Make sure signs are aligned the right way
+		// Assume: positive value is right roll
+		double correction;
+		double error;
+		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), rollChannel, error, correction);
+
+		// If error is positive, accelerate to the right, otherwise left
+		if (error > 0)
+		{
+			topLeftOut += correction;
+			bottomLeftOut += correction;
+			topRightOut -= correction;
+			bottomRightOut -= correction;
+		}
+		else
+		{
+			topLeftOut -= correction;
+			bottomLeftOut -= correction;
+			topRightOut += correction;
+			bottomRightOut += correction;
+		}
+	}
+}
+
+void QuadCopter::processYawChannel(imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+{
+	long rollChannel;
+	bool result = this->receiver.readChannel(RCRadio::YAW, &rollChannel);
+
+	if (result)
+	{
+		// TODO: Make sure signs are aligned the right way
+		// Assume: positive value is right yaw
+		double correction;
+		double error;
+		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), rollChannel, error, correction);
+
+		// If error is positive, yaw right
+		if (error > 0)
+		{
+			topLeftOut += correction;
+			bottomLeftOut -= correction;
+			topRightOut -= correction;
+			bottomRightOut += correction;
+		}
+		else
+		{
+			topLeftOut -= correction;
+			bottomLeftOut += correction;
+			topRightOut += correction;
+			bottomRightOut -= correction;
+		}
+	}
 }
 
