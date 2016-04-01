@@ -7,6 +7,10 @@
 const int MIN_THROTTLE = 1060;
 const int MAX_THROTTLE = 1860;
 
+const int ARMING_PULSE = 1000;
+const int ARMING_PULSE_COUNT = 100;
+const int ARMING_PULSE_DELAY = 19;
+
 void Motor::init(uint8_t pin)
 {
 	this->motorControl.attach(pin);
@@ -17,17 +21,17 @@ void Motor::init(uint8_t pin)
 
 void Motor::arm()
 {
-	// Arm the motor by sending a throttle off command every 20 msecs
-	for (int i = 0; i < 100; i++)
+	// ESCs are armed (typically) by spending a repeated sequence of low throttle signals
+	for (int i = 0; i < ARMING_PULSE_COUNT; i++)
 	{
-		this->motorControl.writeMicroseconds(1000);
-		delay(19);
+		this->motorControl.writeMicroseconds(ARMING_PULSE);
+		delay(ARMING_PULSE_DELAY);
 	}
 
 	delay(5000);
-	DEBUG_PRINTLN("Motor: Armed ");
 
-	this->motorControl.writeMicroseconds(1060);
+	// After the motor is armed, start the motor with a min throttle
+	this->motorControl.writeMicroseconds(MIN_THROTTLE);
 
 }
 
