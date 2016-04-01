@@ -20,6 +20,8 @@ private:
 	double proportional;
 	double integral;
 	double derivative;
+
+	double accumulatedError;
 };
 #endif
 
