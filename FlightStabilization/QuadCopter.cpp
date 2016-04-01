@@ -23,10 +23,10 @@ void QuadCopter::init()
 	}
 
 	// Setup PID controllers
-	this->throttlePID.setPIDConstants(1, 1, 1);
-	this->rollPID.setPIDConstants(1, 1, 1);
-	this->pitchPID.setPIDConstants(1, 1, 1);
-	this->yawPID.setPIDConstants(1, 1, 1);
+	this->throttlePID.setPIDConstants(.01, 0, 0);
+	this->rollPID.setPIDConstants(.01, 1, 1);
+	this->pitchPID.setPIDConstants(.01, 1, 1);
+	this->yawPID.setPIDConstants(.01, 1, 1);
 
 	// Setup the receiver
 	this->receiver.configureChannel(RCRadio::THROTTLE, PinConfiguration::THROTTLE_PIN, 
@@ -40,10 +40,17 @@ void QuadCopter::init()
 
 	// Initialize the motors
 	this->motors[TOP_LEFT_MOTOR].init(PinConfiguration::TOP_LEFT_MOTOR_PIN);
-	this->motors[TOP_LEFT_MOTOR].arm();
-	//this->motors[TOP_RIGHT_MOTOR].init(PinConfiguration::TOP_RIGHT_MOTOR_PIN);
-	//this->motors[BOTTOM_LEFT_MOTOR].init(PinConfiguration::BOTTOM_LEFT_MOTOR_PIN);
-	//this->motors[BOTTOM_RIGHT_MOTOR].init(PinConfiguration::BOTTOM_RIGHT_MOTOR_PIN);
+	this->motors[TOP_RIGHT_MOTOR].init(PinConfiguration::TOP_RIGHT_MOTOR_PIN);
+	this->motors[BOTTOM_LEFT_MOTOR].init(PinConfiguration::BOTTOM_LEFT_MOTOR_PIN);
+	this->motors[BOTTOM_RIGHT_MOTOR].init(PinConfiguration::BOTTOM_RIGHT_MOTOR_PIN);
+
+	// Arm the motors
+	for (int i = 0; i < NUM_MOTORS; i++)
+	{
+		this->motors[i].arm();
+		DEBUG_PRINT("Armed motor: ");
+		DEBUG_PRINTLN(i);
+	}
 
 	DEBUG_PRINTLN("Quadcopter: Initialized");
 }
@@ -111,13 +118,12 @@ void QuadCopter::processPitchChannel(imu::Vector<3> &accelerometer, uint16_t &to
 
 	if (result)
 	{
-		// TODO: Make sure signs are aligned the right way
-		// Assume: positive value is right roll
+		// Positive acceleromoter value is pitch forward, negative is pitch back
 		double correction;
 		double error;
-		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.y()), pitchChannel, error, correction);
+		this->pitchPID.calculateCorrection(Math::radianToDegrees(accelerometer.y()), pitchChannel, error, correction);
 
-		// If error is positive, accelerate forward
+		// If error is positive, accelerate forward by speeding up the rear motors and slowing the fronts
 		if (error > 0)
 		{
 			topLeftOut -= correction;
@@ -142,13 +148,12 @@ void QuadCopter::processRollChannel(imu::Vector<3> &accelerometer, uint16_t &top
 
 	if (result)
 	{
-		// TODO: Make sure signs are aligned the right way
-		// Assume: positive value is right roll
+		// Positive accelerometer is roll right, negative is roll left
 		double correction;
 		double error;
 		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), rollChannel, error, correction);
 
-		// If error is positive, accelerate to the right, otherwise left
+		// If error is positive, roll right by speeding up the left motors and slowing down the right
 		if (error > 0)
 		{
 			topLeftOut += correction;
@@ -173,11 +178,10 @@ void QuadCopter::processYawChannel(imu::Vector<3> &accelerometer, uint16_t &topL
 
 	if (result)
 	{
-		// TODO: Make sure signs are aligned the right way
-		// Assume: positive value is right yaw
+		// + accelerometer is yaw left, - is yaw right
 		double correction;
 		double error;
-		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), rollChannel, error, correction);
+		this->yawPID.calculateCorrection(Math::radianToDegrees(accelerometer.z()), rollChannel, error, correction);
 
 		// If error is positive, yaw right
 		if (error > 0)
