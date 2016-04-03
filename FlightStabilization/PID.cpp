@@ -11,13 +11,18 @@ void PID::setPIDConstants(double p, double i, double d)
 	this->derivative = d;
 }
 
-double PID::calculateCorrection(double actual, double desired, double &errorOut, double &correctionOut)
+void PID::calculateCorrection(double actual, double desired, double &errorOut, double &correctionOut)
 {
 	errorOut = desired - actual;
 	
 	double absError = abs(errorOut);
 	this->accumulatedError += absError;  
 
+	// Technically just a PI controller for now since the derivative isn't used
 	correctionOut = (this->proportional * absError) + (this->integral * this->accumulatedError);
+}
 
+void PID::reset()
+{
+	this->accumulatedError = 0.0;
 }

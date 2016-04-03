@@ -12,9 +12,16 @@
 class PID
 {
 public:
+	// Sets the proportional, integral and derivative gains
 	void setPIDConstants(double p, double i, double d);
 
-	double calculateCorrection(double actual, double desired, double &errorOut, double &correctionOut);
+	// Core PID calculation.  Takes the actual value (of a control), the desired value
+	// and returns the correction to apply calcuated by the PID algorithm.  The actual
+	// error value (desired - actual) is also returned.
+	void calculateCorrection(double actual, double desired, double &errorOut, double &correctionOut);
+
+	// Sets the PID state -- clears any accumulated error
+	void reset();
 
 private:
 	double proportional;
