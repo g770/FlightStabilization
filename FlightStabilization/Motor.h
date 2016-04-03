@@ -25,6 +25,9 @@ public:
 	// Arms the motor
 	void arm();
 
+	// Shuts off the motor
+	void off();
+
 	// Writes a throttle value to the motor
 	// throttleValue - A value between 0 and 1000
 	// Returns true if write was successful, false in a failed write or invalid value

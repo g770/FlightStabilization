@@ -23,10 +23,12 @@ class QuadCopter
 	 void update();
 
  private:
-	 void processThottleChannel(uint16_t&, uint16_t&, uint16_t&, uint16_t&);
-	 void processPitchChannel(imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
-	 void processRollChannel(imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
-	 void processYawChannel(imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
+	 void processThottleChannel(long, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
+	 void processPitchChannel(long, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
+	 void processRollChannel(long, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
+	 void processYawChannel(long, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
+	 void processArmingCommand(long, long, long, long);
+	 void processDisarmingCommand(long, long, long, long);
 
 	 static const int NUM_MOTORS = 1;
 
@@ -37,6 +39,10 @@ class QuadCopter
 	 PID rollPID;
 	 PID pitchPID;
 	 PID yawPID;
+	 bool isArmed;
+
+	 static const int ARMING_COUNT = 150;
+	 long throttleTotal, pitchTotal, rollTotal, yawTotal;
 };
 
 

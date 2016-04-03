@@ -35,6 +35,11 @@ void Motor::arm()
 
 }
 
+void Motor::off()
+{
+	this->motorControl.writeMicroseconds(0);
+}
+
 bool Motor::writeThrottle(uint16_t throttleValue)
 {
 	if (!this->throttleValueValid(throttleValue))
