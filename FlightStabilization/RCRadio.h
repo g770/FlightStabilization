@@ -19,6 +19,18 @@ class RCRadio
 
  public:
 	 static const int NO_SCALING = -1;
+	 static const int NUM_CHANNELS = 4;
+
+	 // Structure to hold the results of reading all channels.  The 
+	 // arrays are indexed by the Channel enum.
+	 struct ChannelData
+	 {
+		 // The data for each channel
+		 long channelData[NUM_CHANNELS];
+
+		 // Bool indicating if the channel contains valid data
+		 bool channelResults[NUM_CHANNELS];
+	 };
 
 	 // Channels supported by the radio
 	 enum Channel 
@@ -40,6 +52,9 @@ class RCRadio
 	// Reads the current value of the given channel
 	bool readChannel(Channel channel, long* result);
 
+	// Reads all of the channels into a single structure
+	void readChannels(ChannelData &result);
+
 private:
 	struct ChannelConfig
 	{
@@ -48,7 +63,6 @@ private:
 		PWMReader monitor;
 	};
 
-	static const int NUM_CHANNELS = 4;
 	ChannelConfig pinMonitors[NUM_CHANNELS];
 };
 

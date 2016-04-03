@@ -23,12 +23,13 @@ class QuadCopter
 	 void update();
 
  private:
-	 void processThottleChannel(long, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
-	 void processPitchChannel(long, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
-	 void processRollChannel(long, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
-	 void processYawChannel(long, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
-	 void processArmingCommand(long, long, long, long);
-	 void processDisarmingCommand(long, long, long, long);
+	 void processThottleChannel(RCRadio::ChannelData &, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
+	 void processPitchChannel(RCRadio::ChannelData &, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
+	 void processRollChannel(RCRadio::ChannelData &, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
+	 void processYawChannel(RCRadio::ChannelData &, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
+	 void processArmingCommand(RCRadio::ChannelData &);
+	 void processDisarmingCommand(RCRadio::ChannelData &);
+	 bool isInArmingCommandErrorBounds(long, long);
 
 	 static const int NUM_MOTORS = 1;
 

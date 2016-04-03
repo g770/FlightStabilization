@@ -10,6 +10,8 @@ const int TOP_RIGHT_MOTOR = 1;
 const int BOTTOM_LEFT_MOTOR = 2;
 const int BOTTOM_RIGHT_MOTOR = 3;
 
+const int ARMING_COMMAND_ERROR = 10;
+
 void QuadCopter::init()
 {
 	if (!this->imu.begin())
@@ -53,20 +55,12 @@ void QuadCopter::update()
 {
 	// Core Control loop
 
-	// TODO: Bit of a hack, calling directly into the pwmreader from here
+	// TODO: Bit of a hack, calling directly into the pwmreader from here to process interrupts
 	PWMReader::update();
 
-	long throttleChannel;
-	bool throttleResult = this->receiver.readChannel(RCRadio::THROTTLE, &throttleChannel);
-
-	long pitchChannel;
-	bool pitchResult = this->receiver.readChannel(RCRadio::PITCH, &pitchChannel);
-
-	long rollChannel;
-	bool rollResult = this->receiver.readChannel(RCRadio::ROLL, &rollChannel);
-
-	long yawChannel;
-	bool yawResult = this->receiver.readChannel(RCRadio::YAW, &yawChannel);
+	// Read the receiver
+	RCRadio::ChannelData channelData;
+	this->receiver.readChannels(channelData);
 
 	if (isArmed)
 	{
@@ -87,25 +81,10 @@ void QuadCopter::update()
 		DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.z()));
 
 		// Process each channel to calculate the new motor values
-		if (throttleResult) 
-		{ 
-			processThottleChannel(throttleChannel, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor); 
-		}
-
-		if (rollResult)
-		{
-			processRollChannel(rollChannel, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
-		}
-
-		if (pitchResult)
-		{
-			processPitchChannel(pitchChannel, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
-		}
-
-		if (yawResult)
-		{
-			processYawChannel(yawChannel, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
-		}
+		processThottleChannel(channelData, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor); 
+		processRollChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+		processPitchChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+		processYawChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 
 		// Write the new motor values
 		this->motors[TOP_LEFT_MOTOR].writeThrottle(newTopLeftMotor);
@@ -113,25 +92,30 @@ void QuadCopter::update()
 		this->motors[TOP_RIGHT_MOTOR].writeThrottle(newTopRightMotor);
 		this->motors[BOTTOM_RIGHT_MOTOR].writeThrottle(newBottomRightMotor);
 
-		if (throttleResult && rollResult && pitchResult && yawResult)
-		{
-			processDisarmingCommand(throttleChannel, pitchChannel, rollChannel, yawChannel);
-		}
-
+		// Check if the disarming command has been given
+		processDisarmingCommand(channelData);
 	}
 	else
 	{
-		if (throttleResult && rollResult && pitchResult && yawResult)
-		{
-			processArmingCommand(throttleChannel, pitchChannel, rollChannel, yawChannel);
-		}
+		processArmingCommand(channelData);
 	}
 }
 
-void QuadCopter::processArmingCommand(long throttleChannel, long pitchChannel, long rollChannel, long yawChannel)
+
+bool QuadCopter::isInArmingCommandErrorBounds(long channelData, long channelEndpoint)
+{
+	if (abs(channelData - channelEndpoint) <= ARMING_COMMAND_ERROR)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void QuadCopter::processArmingCommand(RCRadio::ChannelData &channelData)
 {
 
-	if (throttleChannel == ChannelConfig::getChannelMin(RCRadio::THROTTLE))
+	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::THROTTLE], ChannelConfig::getChannelMin(RCRadio::THROTTLE)))
 	{
 		throttleTotal++;
 	}
@@ -140,7 +124,7 @@ void QuadCopter::processArmingCommand(long throttleChannel, long pitchChannel, l
 		throttleTotal = 0;
 	}
 
-	if (yawChannel == ChannelConfig::getChannelMax(RCRadio::YAW))
+	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::YAW], ChannelConfig::getChannelMax(RCRadio::YAW)))
 	{
 		yawTotal++;
 	}
@@ -149,7 +133,7 @@ void QuadCopter::processArmingCommand(long throttleChannel, long pitchChannel, l
 		yawTotal = 0;
 	}
 
-	if (rollChannel == ChannelConfig::getChannelMax(RCRadio::ROLL))
+	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::ROLL], ChannelConfig::getChannelMax(RCRadio::ROLL)))
 	{
 		rollTotal++;
 	}
@@ -158,7 +142,7 @@ void QuadCopter::processArmingCommand(long throttleChannel, long pitchChannel, l
 		rollTotal = 0;
 	}
 
-	if (pitchChannel == ChannelConfig::getChannelMin(RCRadio::PITCH))
+	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::PITCH], ChannelConfig::getChannelMin(RCRadio::PITCH)))
 	{
 		pitchTotal++;
 	}
@@ -187,10 +171,10 @@ void QuadCopter::processArmingCommand(long throttleChannel, long pitchChannel, l
 	}
 }
 
-void QuadCopter::processDisarmingCommand(long throttleChannel, long pitchChannel, long rollChannel, long yawChannel)
+void QuadCopter::processDisarmingCommand(RCRadio::ChannelData &channelData)
 {
 
-	if (throttleChannel == ChannelConfig::getChannelMin(RCRadio::THROTTLE))
+	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::THROTTLE], ChannelConfig::getChannelMin(RCRadio::THROTTLE)))
 	{
 		throttleTotal++;
 	}
@@ -199,7 +183,7 @@ void QuadCopter::processDisarmingCommand(long throttleChannel, long pitchChannel
 		throttleTotal = 0;
 	}
 
-	if (yawChannel == ChannelConfig::getChannelMin(RCRadio::YAW))
+	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::YAW], ChannelConfig::getChannelMin(RCRadio::YAW)))
 	{
 		yawTotal++;
 	}
@@ -208,7 +192,7 @@ void QuadCopter::processDisarmingCommand(long throttleChannel, long pitchChannel
 		yawTotal = 0;
 	}
 
-	if (rollChannel == ChannelConfig::getChannelMin(RCRadio::ROLL))
+	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::ROLL], ChannelConfig::getChannelMin(RCRadio::ROLL)))
 	{
 		rollTotal++;
 	}
@@ -217,7 +201,7 @@ void QuadCopter::processDisarmingCommand(long throttleChannel, long pitchChannel
 		rollTotal = 0;
 	}
 
-	if (pitchChannel == ChannelConfig::getChannelMin(RCRadio::PITCH))
+	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::PITCH], ChannelConfig::getChannelMin(RCRadio::PITCH)))
 	{
 		pitchTotal++;
 	}
@@ -243,91 +227,110 @@ void QuadCopter::processDisarmingCommand(long throttleChannel, long pitchChannel
 		pitchTotal = 0;
 		rollTotal = 0;
 		yawTotal = 0;
+
+		// Reset the PID controllers since we have likely landed
+		this->throttlePID.reset();
+		this->pitchPID.reset();
+		this->rollPID.reset();
+		this->yawPID.reset();
 	}
 }
 
-void QuadCopter::processThottleChannel(long throttleChannel, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
 {
-	// Calc correction once and apply to all
-	double correction;
-	double error;
-	this->throttlePID.calculateCorrection(topLeftOut, throttleChannel, error, correction);
-
-	topLeftOut += correction;
-	bottomLeftOut += correction;
-	topRightOut += correction;
-	bottomRightOut += correction;
-}
-
-void QuadCopter::processPitchChannel(long pitchChannel, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
-{
-	// Positive acceleromoter value is pitch forward, negative is pitch back
-	double correction;
-	double error;
-	this->pitchPID.calculateCorrection(Math::radianToDegrees(accelerometer.y()), pitchChannel, error, correction);
-
-	// If error is positive, accelerate forward by speeding up the rear motors and slowing the fronts
-	if (error > 0)
+	if (channelData.channelResults[RCRadio::THROTTLE])
 	{
-		topLeftOut -= correction;
-		bottomLeftOut += correction;
-		topRightOut -= correction;
-		bottomRightOut += correction;
-	}
-	else
-	{
-		topLeftOut += correction;
-		bottomLeftOut -= correction;
-		topRightOut += correction;
-		bottomRightOut -= correction;
-	}
-}
+		// Calc correction once and apply to all
+		double correction;
+		double error;
+		this->throttlePID.calculateCorrection(topLeftOut, channelData.channelData[RCRadio::THROTTLE], error, correction);
 
-void QuadCopter::processRollChannel(long rollChannel, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
-{
-	// Positive accelerometer is roll right, negative is roll left
-	double correction;
-	double error;
-	this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), rollChannel, error, correction);
-
-	// If error is positive, roll right by speeding up the left motors and slowing down the right
-	if (error > 0)
-	{
 		topLeftOut += correction;
 		bottomLeftOut += correction;
-		topRightOut -= correction;
-		bottomRightOut -= correction;
-	}
-	else
-	{
-		topLeftOut -= correction;
-		bottomLeftOut -= correction;
 		topRightOut += correction;
 		bottomRightOut += correction;
 	}
 }
 
-void QuadCopter::processYawChannel(long yawChannel, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
 {
-	// + accelerometer is yaw left, - is yaw right
-	double correction;
-	double error;
-	this->yawPID.calculateCorrection(Math::radianToDegrees(accelerometer.z()), yawChannel, error, correction);
+	if (channelData.channelResults[RCRadio::PITCH])
+	{
+		// Positive acceleromoter value is pitch forward, negative is pitch back
+		double correction;
+		double error;
+		this->pitchPID.calculateCorrection(Math::radianToDegrees(accelerometer.y()), channelData.channelData[RCRadio::PITCH], error, correction);
 
-	// If error is positive, yaw right
-	if (error > 0)
-	{
-		topLeftOut += correction;
-		bottomLeftOut -= correction;
-		topRightOut -= correction;
-		bottomRightOut += correction;
+		// If error is positive, accelerate forward by speeding up the rear motors and slowing the fronts
+		if (error > 0)
+		{
+			topLeftOut -= correction;
+			bottomLeftOut += correction;
+			topRightOut -= correction;
+			bottomRightOut += correction;
+		}
+		else
+		{
+			topLeftOut += correction;
+			bottomLeftOut -= correction;
+			topRightOut += correction;
+			bottomRightOut -= correction;
+		}
 	}
-	else
+}
+
+void QuadCopter::processRollChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+{
+
+	if (channelData.channelResults[RCRadio::ROLL])
 	{
-		topLeftOut -= correction;
-		bottomLeftOut += correction;
-		topRightOut += correction;
-		bottomRightOut -= correction;
+		// Positive accelerometer is roll right, negative is roll left
+		double correction;
+		double error;
+		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), channelData.channelData[RCRadio::ROLL], error, correction);
+
+		// If error is positive, roll right by speeding up the left motors and slowing down the right
+		if (error > 0)
+		{
+			topLeftOut += correction;
+			bottomLeftOut += correction;
+			topRightOut -= correction;
+			bottomRightOut -= correction;
+		}
+		else
+		{
+			topLeftOut -= correction;
+			bottomLeftOut -= correction;
+			topRightOut += correction;
+			bottomRightOut += correction;
+		}
+	}
+}
+
+void QuadCopter::processYawChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+{
+	if (channelData.channelResults[RCRadio::YAW])
+	{
+		// + accelerometer is yaw left, - is yaw right
+		double correction;
+		double error;
+		this->yawPID.calculateCorrection(Math::radianToDegrees(accelerometer.z()), channelData.channelData[RCRadio::YAW], error, correction);
+
+		// If error is positive, yaw right
+		if (error > 0)
+		{
+			topLeftOut += correction;
+			bottomLeftOut -= correction;
+			topRightOut -= correction;
+			bottomRightOut += correction;
+		}
+		else
+		{
+			topLeftOut -= correction;
+			bottomLeftOut += correction;
+			topRightOut += correction;
+			bottomRightOut -= correction;
+		}
 	}
 }
 

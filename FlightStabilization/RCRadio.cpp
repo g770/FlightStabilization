@@ -28,6 +28,16 @@ void RCRadio::configureChannel(Channel channel, uint8_t pinNum, long scalingMin,
 	DEBUG_PRINTLN(pinNum);
 }
 
+void RCRadio::readChannels(ChannelData &result)
+{
+	for (int channel = 0; channel < NUM_CHANNELS; channel++)
+	{
+		long data;
+		bool readResult = this->readChannel((Channel)channel, &data);
+		result.channelData[(Channel)channel] = data;
+		result.channelResults[(Channel)channel] = readResult;
+	}
+}
 
 bool RCRadio::readChannel(Channel channel, long* result)
 {
