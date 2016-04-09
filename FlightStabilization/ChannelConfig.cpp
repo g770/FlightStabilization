@@ -12,16 +12,16 @@ long ChannelConfig::getChannelMin(RCRadio::Channel channel)
 	switch (channel)
 	{
 	case RCRadio::Channel::PITCH:
-		retVal = -5;
+		retVal = -45;
 		break;
 	case RCRadio::Channel::ROLL:
-		retVal = -5;
+		retVal = -45;
 		break;
 	case RCRadio::Channel::THROTTLE:
 		retVal = Motor::MIN_THROTTLE_IN;
 		break;
 	case RCRadio::Channel::YAW:
-		retVal = -5;
+		retVal = -45;
 		break;
 	}
 
@@ -35,16 +35,16 @@ long ChannelConfig::getChannelMax(RCRadio::Channel channel)
 	switch (channel)
 	{
 	case RCRadio::Channel::PITCH:
-		retVal = 5;
+		retVal = 45;
 		break;
 	case RCRadio::Channel::ROLL:
-		retVal = 5;
+		retVal = 45;
 		break;
 	case RCRadio::Channel::THROTTLE:
 		retVal = Motor::MAX_THROTTLE_IN;
 		break;
 	case RCRadio::Channel::YAW:
-		retVal = 5;
+		retVal = 45;
 		break;
 	}
 

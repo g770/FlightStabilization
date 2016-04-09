@@ -10,7 +10,7 @@ const int TOP_RIGHT_MOTOR = 1;
 const int BOTTOM_LEFT_MOTOR = 2;
 const int BOTTOM_RIGHT_MOTOR = 3;
 
-const int ARMING_COMMAND_ERROR = 10;
+const double ARMING_COMMAND_ERROR = 0.2;
 
 void QuadCopter::init()
 {
@@ -62,6 +62,7 @@ void QuadCopter::update()
 	RCRadio::ChannelData channelData;
 	this->receiver.readChannels(channelData);
 
+	// If we are armed, begin the PID loop
 	if (isArmed)
 	{
 		// Read current motor values
@@ -73,12 +74,12 @@ void QuadCopter::update()
 		// Read the accelerometer
 		imu::Vector<3> accelerometer = this->imu.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
 
-		DEBUG_PRINT("Accel (x, y, z): ");
-		DEBUG_PRINT(Math::radianToDegrees(accelerometer.x()));
-		DEBUG_PRINT(", ");
-		DEBUG_PRINT(Math::radianToDegrees(accelerometer.y()));
-		DEBUG_PRINT(", ");
-		DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.z()));
+		//DEBUG_PRINT("Accel (x, y, z): ");
+		//DEBUG_PRINT(Math::radianToDegrees(accelerometer.x()));
+		//DEBUG_PRINT(", ");
+		//DEBUG_PRINT(Math::radianToDegrees(accelerometer.y()));
+		//DEBUG_PRINT(", ");
+		//DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.z()));
 
 		// Process each channel to calculate the new motor values
 		processThottleChannel(channelData, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor); 
@@ -104,7 +105,9 @@ void QuadCopter::update()
 
 bool QuadCopter::isInArmingCommandErrorBounds(long channelData, long channelEndpoint)
 {
-	if (abs(channelData - channelEndpoint) <= ARMING_COMMAND_ERROR)
+	double error = abs(channelEndpoint * ARMING_COMMAND_ERROR);
+
+	if (abs(channelData - channelEndpoint) <= error)
 	{
 		return true;
 	}
@@ -114,41 +117,52 @@ bool QuadCopter::isInArmingCommandErrorBounds(long channelData, long channelEndp
 
 void QuadCopter::processArmingCommand(RCRadio::ChannelData &channelData)
 {
-
-	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::THROTTLE], ChannelConfig::getChannelMin(RCRadio::THROTTLE)))
+	if (channelData.channelResults[(int)RCRadio::THROTTLE])
 	{
-		throttleTotal++;
-	}
-	else
-	{
-		throttleTotal = 0;
-	}
-
-	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::YAW], ChannelConfig::getChannelMax(RCRadio::YAW)))
-	{
-		yawTotal++;
-	}
-	else 
-	{
-		yawTotal = 0;
+		if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::THROTTLE], ChannelConfig::getChannelMin(RCRadio::THROTTLE)))
+		{
+			throttleTotal++;
+		}
+		else
+		{
+			throttleTotal = 0;
+		}
 	}
 
-	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::ROLL], ChannelConfig::getChannelMax(RCRadio::ROLL)))
+	if (channelData.channelResults[(int)RCRadio::YAW])
 	{
-		rollTotal++;
-	}
-	else
-	{
-		rollTotal = 0;
+		if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::YAW], ChannelConfig::getChannelMax(RCRadio::YAW)))
+		{
+			yawTotal++;
+		}
+		else
+		{
+			yawTotal = 0;
+		}
 	}
 
-	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::PITCH], ChannelConfig::getChannelMin(RCRadio::PITCH)))
+	if (channelData.channelResults[(int)RCRadio::ROLL])
 	{
-		pitchTotal++;
+		if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::ROLL], ChannelConfig::getChannelMax(RCRadio::ROLL)))
+		{
+			rollTotal++;
+		}
+		else
+		{
+			rollTotal = 0;
+		}
 	}
-	else
+
+	if (channelData.channelResults[(int)RCRadio::PITCH])
 	{
-		pitchTotal = 0;
+		if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::PITCH], ChannelConfig::getChannelMin(RCRadio::PITCH)))
+		{
+			pitchTotal++;
+		}
+		else
+		{
+			pitchTotal = 0;
+		}
 	}
 
 	if (throttleTotal >= ARMING_COUNT && yawTotal >= ARMING_COUNT && rollTotal >= ARMING_COUNT && pitchTotal >= ARMING_COUNT)
@@ -174,40 +188,52 @@ void QuadCopter::processArmingCommand(RCRadio::ChannelData &channelData)
 void QuadCopter::processDisarmingCommand(RCRadio::ChannelData &channelData)
 {
 
-	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::THROTTLE], ChannelConfig::getChannelMin(RCRadio::THROTTLE)))
+	if (channelData.channelResults[(int)RCRadio::THROTTLE])
 	{
-		throttleTotal++;
-	}
-	else
-	{
-		throttleTotal = 0;
-	}
-
-	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::YAW], ChannelConfig::getChannelMin(RCRadio::YAW)))
-	{
-		yawTotal++;
-	}
-	else
-	{
-		yawTotal = 0;
+		if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::THROTTLE], ChannelConfig::getChannelMin(RCRadio::THROTTLE)))
+		{
+			throttleTotal++;
+		}
+		else
+		{
+			throttleTotal = 0;
+		}
 	}
 
-	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::ROLL], ChannelConfig::getChannelMin(RCRadio::ROLL)))
+	if (channelData.channelResults[(int)RCRadio::YAW])
 	{
-		rollTotal++;
-	}
-	else
-	{
-		rollTotal = 0;
+		if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::YAW], ChannelConfig::getChannelMin(RCRadio::YAW)))
+		{
+			yawTotal++;
+		}
+		else
+		{
+			yawTotal = 0;
+		}
 	}
 
-	if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::PITCH], ChannelConfig::getChannelMin(RCRadio::PITCH)))
+	if (channelData.channelResults[(int)RCRadio::ROLL])
 	{
-		pitchTotal++;
+		if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::ROLL], ChannelConfig::getChannelMin(RCRadio::ROLL)))
+		{
+			rollTotal++;
+		}
+		else
+		{
+			rollTotal = 0;
+		}
 	}
-	else
+
+	if (channelData.channelResults[(int)RCRadio::PITCH])
 	{
-		pitchTotal = 0;
+		if (this->isInArmingCommandErrorBounds(channelData.channelData[RCRadio::PITCH], ChannelConfig::getChannelMin(RCRadio::PITCH)))
+		{
+			pitchTotal++;
+		}
+		else
+		{
+			pitchTotal = 0;
+		}
 	}
 
 	if (throttleTotal >= ARMING_COUNT && yawTotal >= ARMING_COUNT && rollTotal >= ARMING_COUNT && pitchTotal >= ARMING_COUNT)

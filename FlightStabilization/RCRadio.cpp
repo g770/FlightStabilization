@@ -1,5 +1,6 @@
 #include "RCRadio.h"
 #include "CommonDefs.h"
+#include "Math.h"
 
 // The min and max pulse widths that can be received on a channel
 // The radio endpoints for each channel should be calibrated to send these as min and max values
@@ -32,14 +33,16 @@ void RCRadio::readChannels(ChannelData &result)
 {
 	for (int channel = 0; channel < NUM_CHANNELS; channel++)
 	{
-		long data;
+		double data;
 		bool readResult = this->readChannel((Channel)channel, &data);
-		result.channelData[(Channel)channel] = data;
-		result.channelResults[(Channel)channel] = readResult;
+		result.channelData[channel] = data;
+		result.channelResults[channel] = readResult;
 	}
 }
 
-bool RCRadio::readChannel(Channel channel, long* result)
+static long count = 0;
+
+bool RCRadio::readChannel(Channel channel, double* result)
 {
 	ChannelConfig channelConfig = this->pinMonitors[channel];
 
@@ -49,8 +52,6 @@ bool RCRadio::readChannel(Channel channel, long* result)
 
 	if (channelReadResult)
 	{
-		//DEBUG_PRINT("Pulse width: ");
-		//DEBUG_PRINTLN(lastPulseWidth.getMicroSeconds());
 
 		// Map the pulse width to the range for the channel and return it 
 		if (channelConfig.scalingMin == NO_SCALING && channelConfig.scalingMax == NO_SCALING)
@@ -59,8 +60,19 @@ bool RCRadio::readChannel(Channel channel, long* result)
 		}
 		else
 		{
-			*result = map(lastPulseWidth.getMicroSeconds(), MIN_CHANNEL_PULSE_WIDTH.getMicroSeconds(), 
+
+			*result = Math::map_double(lastPulseWidth.getMicroSeconds(), MIN_CHANNEL_PULSE_WIDTH.getMicroSeconds(),
 				MAX_CHANNEL_PULSE_WIDTH.getMicroSeconds(), channelConfig.scalingMin, channelConfig.scalingMax);
+
+			/*
+			++count;
+			if ((count % 500) == 0)
+			{
+				DEBUG_PRINT(lastPulseWidth.getMicroSeconds());
+				DEBUG_PRINT(" -> ");
+				DEBUG_PRINTLN(*result);
+			}
+			*/
 		}
 
 		return true;

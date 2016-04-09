@@ -18,11 +18,15 @@ void PID::calculateCorrection(double actual, double desired, double &errorOut, d
 	double absError = abs(errorOut);
 	this->accumulatedError += absError;  
 
-	// Technically just a PI controller for now since the derivative isn't used
-	correctionOut = (this->proportional * absError) + (this->integral * this->accumulatedError);
+	double dt = actual - this->previousActual;
+	correctionOut = (this->proportional * absError) + (this->integral * this->accumulatedError) + 
+		(this->derivative * dt);
+
+	this->previousActual = actual;
 }
 
 void PID::reset()
 {
 	this->accumulatedError = 0.0;
+	this->previousActual = 0.0;
 }

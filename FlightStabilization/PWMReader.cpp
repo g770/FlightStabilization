@@ -167,7 +167,7 @@ void PWMReader::monitorPin(uint8_t pinNum, TimeInterval minPulseWidth, TimeInter
 	DEBUG_PRINTLN(monitoredPin);
 }
 
- bool PWMReader::getLastPulseWidth(TimeInterval* outInterval)
+bool PWMReader::getLastPulseWidth(TimeInterval* outInterval)
 {
 	uint8_t monitoredPin = this->getMonitoredPin();
 

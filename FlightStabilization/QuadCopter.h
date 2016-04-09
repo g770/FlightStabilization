@@ -42,7 +42,7 @@ class QuadCopter
 	 PID yawPID;
 	 bool isArmed;
 
-	 static const int ARMING_COUNT = 150;
+	 static const int ARMING_COUNT = 20;
 	 long throttleTotal, pitchTotal, rollTotal, yawTotal;
 };
 

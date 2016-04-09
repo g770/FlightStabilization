@@ -29,6 +29,7 @@ private:
 	double derivative;
 
 	double accumulatedError;
+	double previousActual;
 };
 #endif
 
