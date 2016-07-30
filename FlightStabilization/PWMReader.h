@@ -11,8 +11,8 @@
 
 #include "TimeInterval.h"
 
-// Class the monitors pulses on a specific pin and 
-// calculates the width of the pulse
+// Monitors pulses on a specific pin and 
+// calculates the width of the pulse on that pin
 class PWMReader
 {
  public:

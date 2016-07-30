@@ -9,6 +9,7 @@
 	#include "WProgram.h"
 #endif
 
+// Represents a single PID controller
 class PID
 {
 public:

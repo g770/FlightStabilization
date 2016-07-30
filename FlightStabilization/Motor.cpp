@@ -7,8 +7,13 @@
 const int MIN_THROTTLE = 1060;
 const int MAX_THROTTLE = 1860;
 
+// The pulse length to send when arming the motor
 const int ARMING_PULSE = 1000;
+
+// How many pulses to send when arming
 const int ARMING_PULSE_COUNT = 100;
+
+// Time delay between arming pulses
 const int ARMING_PULSE_DELAY = 19;
 
 void Motor::init(uint8_t pin)

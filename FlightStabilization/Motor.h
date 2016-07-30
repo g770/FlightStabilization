@@ -11,6 +11,7 @@
 
 #include <Servo.h>
 
+// Represents a single quadcopter motor
 class Motor
 {
 
@@ -33,6 +34,7 @@ public:
 	// Returns true if write was successful, false in a failed write or invalid value
 	bool writeThrottle(uint16_t throttleValue);
 
+	// Returns the current throttle value
 	uint16_t getCurrentThrottle() { return this->currentThrottle; }
 
  private:

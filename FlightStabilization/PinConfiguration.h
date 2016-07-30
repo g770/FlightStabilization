@@ -9,6 +9,7 @@
 	#include "WProgram.h"
 #endif
 
+// Defins and configures the Arduino pins
 class PinConfiguration
 {
 

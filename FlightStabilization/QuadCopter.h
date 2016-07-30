@@ -15,11 +15,16 @@
 #include "Adafruit_BNO055.h"
 #include "PID.h"
 
+// Core class that represenst a quadcopter and all of its components.
 class QuadCopter
 {
 
  public:
+	 // One time intialization of the quadcopter
 	 void init();
+
+	 // Core update loop, called during the main update loop.  This processes inputs from the receiver, 
+	 // uses the PID controller and sends the appropriate outputs to the motors.
 	 void update();
 
  private:

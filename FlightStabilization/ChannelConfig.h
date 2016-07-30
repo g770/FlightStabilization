@@ -11,11 +11,15 @@
 
 #include "RCRadio.h"
 
+// Stores configuration for a single RC radio channel
 class ChannelConfig
 {
 
 public:
+	// Gets the minimum pulse width a channel can return
 	static long getChannelMin(RCRadio::Channel channel);
+
+	// Gets the maximum pulse width a channel can return
 	static long getChannelMax(RCRadio::Channel channel);
 };
 

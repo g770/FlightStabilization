@@ -4,7 +4,7 @@
 #include "ChannelConfig.h"
 #include "Math.h"
 
-// Constants defining the motor positions
+// Constants defining the motor positions, used as array indexes
 const int TOP_LEFT_MOTOR = 0;
 const int TOP_RIGHT_MOTOR = 1;
 const int BOTTOM_LEFT_MOTOR = 2;
@@ -62,7 +62,9 @@ void QuadCopter::update()
 	RCRadio::ChannelData channelData;
 	this->receiver.readChannels(channelData);
 
-	// If we are armed, begin the PID loop
+	// In the update loop there are two states, motors armed and unarmed.  If we are in an
+	// armed state the motors are running and we'll perform flight stabilization.  If we are in
+	// an unarmed state we watch for the arming command.
 	if (isArmed)
 	{
 		// Read current motor values
