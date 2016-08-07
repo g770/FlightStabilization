@@ -34,9 +34,11 @@ class QuadCopter
 	 void processYawChannel(RCRadio::ChannelData &, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&);
 	 void processArmingCommand(RCRadio::ChannelData &);
 	 void processDisarmingCommand(RCRadio::ChannelData &);
+	 void armMotors();
+	 void disarmMotors();
 	 bool isInArmingCommandErrorBounds(long, long);
 
-	 static const int NUM_MOTORS = 1;
+	 static const int NUM_MOTORS = 4;
 
 	 RCRadio receiver;
 	 Motor motors[NUM_MOTORS];

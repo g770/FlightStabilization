@@ -14,14 +14,16 @@ const double ARMING_COMMAND_ERROR = 0.2;
 
 void QuadCopter::init()
 {
+	DEBUG_PRINTLN("Quadcopter: Starting init");
+
 	if (!this->imu.begin())
 	{
-		DEBUG_PRINTLN("Failed to initialize IMU");
+		DEBUG_PRINTLN("Quadcopter: Failed to initialize IMU");
 		while (1);
 	}
 	else
 	{
-		DEBUG_PRINTLN("IMU Initialized");
+		DEBUG_PRINTLN("Quadcopter: IMU Initialized");
 	}
 
 	// Setup PID controllers
@@ -85,9 +87,9 @@ void QuadCopter::update()
 
 		// Process each channel to calculate the new motor values
 		processThottleChannel(channelData, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor); 
-		processRollChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
-		processPitchChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
-		processYawChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+		//processRollChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+		//processPitchChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+		//processYawChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 
 		// Write the new motor values
 		this->motors[TOP_LEFT_MOTOR].writeThrottle(newTopLeftMotor);
@@ -100,7 +102,10 @@ void QuadCopter::update()
 	}
 	else
 	{
-		processArmingCommand(channelData);
+		//processArmingCommand(channelData);
+		// Debug
+		this->armMotors();
+		this->isArmed = true;
 	}
 }
 
@@ -172,18 +177,23 @@ void QuadCopter::processArmingCommand(RCRadio::ChannelData &channelData)
 		DEBUG_PRINTLN("ARMING SIGNAL RECEIVED");
 
 		// Arm the motors
-		for (int i = 0; i < NUM_MOTORS; i++)
-		{
-			this->motors[i].arm();
-			DEBUG_PRINT("Armed motor: ");
-			DEBUG_PRINTLN(i);
-		}
+		this->armMotors();
 
 		this->isArmed = true;
 		throttleTotal = 0;
 		pitchTotal = 0;
 		rollTotal = 0;
 		yawTotal = 0;
+	}
+}
+
+void QuadCopter::armMotors()
+{
+	for (int i = 0; i < NUM_MOTORS; i++)
+	{
+		this->motors[i].arm();
+		DEBUG_PRINT("Armed motor: ");
+		DEBUG_PRINTLN(i);
 	}
 }
 
@@ -242,13 +252,8 @@ void QuadCopter::processDisarmingCommand(RCRadio::ChannelData &channelData)
 	{
 		DEBUG_PRINTLN("DISARMING SIGNAL RECEIVED");
 
-		// Arm the motors
-		for (int i = 0; i < NUM_MOTORS; i++)
-		{
-			this->motors[i].off();
-			DEBUG_PRINT("Shutdown motor: ");
-			DEBUG_PRINTLN(i);
-		}
+		// Disarm the motors
+		this->disarmMotors();
 
 		this->isArmed = false;
 		throttleTotal = 0;
@@ -264,6 +269,17 @@ void QuadCopter::processDisarmingCommand(RCRadio::ChannelData &channelData)
 	}
 }
 
+void QuadCopter::disarmMotors()
+{
+	for (int i = 0; i < NUM_MOTORS; i++)
+	{
+		this->motors[i].off();
+		DEBUG_PRINT("Shutdown motor: ");
+		DEBUG_PRINTLN(i);
+	}
+
+}
+
 void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
 {
 	if (channelData.channelResults[RCRadio::THROTTLE])
@@ -277,6 +293,16 @@ void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16
 		bottomLeftOut += correction;
 		topRightOut += correction;
 		bottomRightOut += correction;
+
+		DEBUG_PRINT("Throttle: ");
+		DEBUG_PRINT(topLeftOut);
+		DEBUG_PRINT(", ");
+		DEBUG_PRINT(topRightOut);
+		DEBUG_PRINT(", ");
+		DEBUG_PRINT(bottomLeftOut);
+		DEBUG_PRINT(", ");
+		DEBUG_PRINTLN(bottomRightOut);
+
 	}
 }
 
