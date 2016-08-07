@@ -23,16 +23,19 @@ QuadCopter copter;
 
 void setup() {
 
-	DEBUG_PRINTLN("Setup: waiting for esc power up");
-	delay(10000);
-	DEBUG_PRINTLN("Setup: waiting complete");
-
 #ifdef DEBUG_LOG
 	Serial.begin(115200);
 #endif // DEBUG_LOG
 
+	DEBUG_PRINTLN("Setup: waiting for esc power up");
+	delay(5000);
+	DEBUG_PRINTLN("Setup: waiting complete");
+
+
 	// Setup pins
 	PinConfiguration::init();
+	DEBUG_PRINTLN("Setup: pins configured");
+
 
 	copter.init();
 	runTests();  // Will only be execute if TESTMODE is defined
