@@ -15,10 +15,15 @@ class PinConfiguration
 
  public:
 	 // Motor pinouts
+	 // Rotation pattern:
+	 // Top left: clockwise
+	 // Top right: counter clockwise
+	 // Bottom left: counter clockwise
+	 // Bottom right: clockwise
 	 static const uint8_t TOP_LEFT_MOTOR_PIN = 8;
-	 static const uint8_t TOP_RIGHT_MOTOR_PIN = 8;
-	 static const uint8_t BOTTOM_LEFT_MOTOR_PIN = 8;
-	 static const uint8_t BOTTOM_RIGHT_MOTOR_PIN = 8;
+	 static const uint8_t TOP_RIGHT_MOTOR_PIN = 9;
+	 static const uint8_t BOTTOM_LEFT_MOTOR_PIN = 10;
+	 static const uint8_t BOTTOM_RIGHT_MOTOR_PIN = 11;
 
 	 // Receiver channel pins
 	 static const uint8_t THROTTLE_PIN = 1;
