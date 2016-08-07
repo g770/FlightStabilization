@@ -15,11 +15,11 @@ void PID::calculateCorrection(double actual, double desired, double &errorOut, d
 {
 	errorOut = desired - actual;
 	
-	double absError = abs(errorOut);
-	this->accumulatedError += absError;  
+	//double absError = abs(errorOut);
+	this->accumulatedError += errorOut;  
 
 	double dt = actual - this->previousActual;
-	correctionOut = (this->proportional * absError) + (this->integral * this->accumulatedError) + 
+	correctionOut = (this->proportional * errorOut) + (this->integral * this->accumulatedError) + 
 		(this->derivative * dt);
 
 	this->previousActual = actual;
