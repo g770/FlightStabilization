@@ -64,6 +64,8 @@ void QuadCopter::update()
 	RCRadio::ChannelData channelData;
 	this->receiver.readChannels(channelData);
 
+	double lastX, lastY, lastZ;
+
 	// In the update loop there are two states, motors armed and unarmed.  If we are in an
 	// armed state the motors are running and we'll perform flight stabilization.  If we are in
 	// an unarmed state we watch for the arming command.
@@ -77,6 +79,32 @@ void QuadCopter::update()
 
 		// Read the accelerometer
 		imu::Vector<3> accelerometer = this->imu.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+
+		// IMU notes:
+		// -Y -> pitch forward
+		// +Y -> pitch backward
+		// -X -> roll left
+		// +X -> roll right
+		// -Z -> yaw right
+		// +Z -> yaw left
+		if (abs(Math::radianToDegrees(accelerometer.x()) - lastX) > 5) {
+			DEBUG_PRINT("X change: ");
+			DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.x()));
+		}
+
+		if (abs(Math::radianToDegrees(accelerometer.y()) - lastY) > 5) {
+			DEBUG_PRINT("Y change: ");
+			DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.y()));
+		}
+
+		if (abs(Math::radianToDegrees(accelerometer.z()) - lastZ) > 5) {
+			DEBUG_PRINT("Z change: ");
+			DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.z()));
+		}
+
+		lastX = Math::radianToDegrees(accelerometer.x());
+		lastY = Math::radianToDegrees(accelerometer.y());
+		lastZ = Math::radianToDegrees(accelerometer.z());
 
 		//DEBUG_PRINT("Accel (x, y, z): ");
 		//DEBUG_PRINT(Math::radianToDegrees(accelerometer.x()));
@@ -294,14 +322,14 @@ void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16
 		topRightOut += correction;
 		bottomRightOut += correction;
 
-		DEBUG_PRINT("Throttle: ");
-		DEBUG_PRINT(topLeftOut);
-		DEBUG_PRINT(", ");
-		DEBUG_PRINT(topRightOut);
-		DEBUG_PRINT(", ");
-		DEBUG_PRINT(bottomLeftOut);
-		DEBUG_PRINT(", ");
-		DEBUG_PRINTLN(bottomRightOut);
+		//DEBUG_PRINT("Throttle: ");
+		//DEBUG_PRINT(topLeftOut);
+		//DEBUG_PRINT(", ");
+		//DEBUG_PRINT(topRightOut);
+		//DEBUG_PRINT(", ");
+		//DEBUG_PRINT(bottomLeftOut);
+		//DEBUG_PRINT(", ");
+		//DEBUG_PRINTLN(bottomRightOut);
 
 	}
 }
