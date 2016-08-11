@@ -338,12 +338,11 @@ void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vec
 {
 	if (channelData.channelResults[RCRadio::PITCH])
 	{
-		// Positive acceleromoter value is pitch forward, negative is pitch back
 		double correction;
 		double error;
 		this->pitchPID.calculateCorrection(Math::radianToDegrees(accelerometer.y()), channelData.channelData[RCRadio::PITCH], error, correction);
 
-		// If error is positive, accelerate forward by speeding up the rear motors and slowing the fronts
+		// If error is positive we are pitching backward, correct by speeding up the rear motors and slowing the fronts
 		if (error > 0)
 		{
 			topLeftOut -= correction;
@@ -351,7 +350,7 @@ void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vec
 			topRightOut -= correction;
 			bottomRightOut += correction;
 		}
-		else
+		else // pitching forward
 		{
 			topLeftOut += correction;
 			bottomLeftOut -= correction;
@@ -363,28 +362,26 @@ void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vec
 
 void QuadCopter::processRollChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
 {
-
 	if (channelData.channelResults[RCRadio::ROLL])
 	{
-		// Positive accelerometer is roll right, negative is roll left
 		double correction;
 		double error;
 		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), channelData.channelData[RCRadio::ROLL], error, correction);
 
-		// If error is positive, roll right by speeding up the left motors and slowing down the right
+		// If error is positive we are rolling to the right, correct by speeding up the right motors and slowing down the left
 		if (error > 0)
-		{
-			topLeftOut += correction;
-			bottomLeftOut += correction;
-			topRightOut -= correction;
-			bottomRightOut -= correction;
-		}
-		else
 		{
 			topLeftOut -= correction;
 			bottomLeftOut -= correction;
 			topRightOut += correction;
 			bottomRightOut += correction;
+		}
+		else // Rolling to the left, speed up the left motors and slow the right
+		{
+			topLeftOut += correction;
+			bottomLeftOut += correction;
+			topRightOut -= correction;
+			bottomRightOut -= correction;
 		}
 	}
 }
@@ -393,25 +390,24 @@ void QuadCopter::processYawChannel(RCRadio::ChannelData &channelData, imu::Vecto
 {
 	if (channelData.channelResults[RCRadio::YAW])
 	{
-		// + accelerometer is yaw left, - is yaw right
 		double correction;
 		double error;
 		this->yawPID.calculateCorrection(Math::radianToDegrees(accelerometer.z()), channelData.channelData[RCRadio::YAW], error, correction);
 
-		// If error is positive, yaw right
+		// If error is positive, we are yawing to the left, correct by speeding up the top right and bottom left motors
 		if (error > 0)
-		{
-			topLeftOut += correction;
-			bottomLeftOut -= correction;
-			topRightOut -= correction;
-			bottomRightOut += correction;
-		}
-		else
 		{
 			topLeftOut -= correction;
 			bottomLeftOut += correction;
 			topRightOut += correction;
 			bottomRightOut -= correction;
+		}
+		else
+		{
+			topLeftOut += correction;
+			bottomLeftOut -= correction;
+			topRightOut -= correction;
+			bottomRightOut += correction;
 		}
 	}
 }
