@@ -28,9 +28,9 @@ void QuadCopter::init()
 
 	// Setup PID controllers
 	this->throttlePID.setPIDConstants(.01, 0, 0);
-	this->rollPID.setPIDConstants(.01, 1, 1);
-	this->pitchPID.setPIDConstants(.01, 1, 1);
-	this->yawPID.setPIDConstants(.01, 1, 1);
+	this->rollPID.setPIDConstants(.01, 0, 0);
+	this->pitchPID.setPIDConstants(.01, .01, 0);
+	this->yawPID.setPIDConstants(.01, .01, 0);
 
 	// Setup the receiver
 	this->receiver.configureChannel(RCRadio::THROTTLE, PinConfiguration::THROTTLE_PIN, 
@@ -53,10 +53,10 @@ void QuadCopter::init()
 }
 
 
+int counter = 0;
 void QuadCopter::update()
 {
 	// Core Control loop
-
 	// TODO: Bit of a hack, calling directly into the pwmreader from here to process interrupts
 	PWMReader::update();
 
@@ -77,8 +77,24 @@ void QuadCopter::update()
 		uint16_t newTopRightMotor = this->motors[TOP_RIGHT_MOTOR].getCurrentThrottle();
 		uint16_t newBottomRightMotor = this->motors[BOTTOM_RIGHT_MOTOR].getCurrentThrottle();
 
+		if ((counter % 10) == 0)
+		{
+			DEBUG_PRINT("TL: ");
+			DEBUG_PRINT(newTopLeftMotor);
+			DEBUG_PRINT(" ");
+			DEBUG_PRINT("TR: ");
+			DEBUG_PRINT(newTopRightMotor);
+			DEBUG_PRINT(" ");
+			DEBUG_PRINT("BL: ");
+			DEBUG_PRINT(newBottomLeftMotor);
+			DEBUG_PRINT(" ");
+			DEBUG_PRINT("BR: ");
+			DEBUG_PRINTLN(newBottomRightMotor);
+		}
+		counter++;
+
 		// Read the accelerometer
-		imu::Vector<3> accelerometer = this->imu.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+		imu::Vector<3> accelerometer = this->imu.getVector();
 
 		// IMU notes:
 		// -Y -> pitch forward
@@ -87,6 +103,7 @@ void QuadCopter::update()
 		// +X -> roll right
 		// -Z -> yaw right
 		// +Z -> yaw left
+		/*
 		if (abs(Math::radianToDegrees(accelerometer.x()) - lastX) > 5) {
 			DEBUG_PRINT("X change: ");
 			DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.x()));
@@ -101,7 +118,7 @@ void QuadCopter::update()
 			DEBUG_PRINT("Z change: ");
 			DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.z()));
 		}
-
+		*/
 		lastX = Math::radianToDegrees(accelerometer.x());
 		lastY = Math::radianToDegrees(accelerometer.y());
 		lastZ = Math::radianToDegrees(accelerometer.z());
@@ -115,7 +132,7 @@ void QuadCopter::update()
 
 		// Process each channel to calculate the new motor values
 		processThottleChannel(channelData, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor); 
-		//processRollChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+		processRollChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 		//processPitchChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 		//processYawChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 
@@ -321,16 +338,6 @@ void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16
 		bottomLeftOut += correction;
 		topRightOut += correction;
 		bottomRightOut += correction;
-
-		//DEBUG_PRINT("Throttle: ");
-		//DEBUG_PRINT(topLeftOut);
-		//DEBUG_PRINT(", ");
-		//DEBUG_PRINT(topRightOut);
-		//DEBUG_PRINT(", ");
-		//DEBUG_PRINT(bottomLeftOut);
-		//DEBUG_PRINT(", ");
-		//DEBUG_PRINTLN(bottomRightOut);
-
 	}
 }
 
@@ -367,6 +374,9 @@ void QuadCopter::processRollChannel(RCRadio::ChannelData &channelData, imu::Vect
 		double correction;
 		double error;
 		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), channelData.channelData[RCRadio::ROLL], error, correction);
+
+		DEBUG_PRINT("Roll: ");
+		DEBUG_PRINTLN(channelData.channelData[RCRadio::ROLL]);
 
 		// If error is positive we are rolling to the right, correct by speeding up the right motors and slowing down the left
 		if (error > 0)

@@ -11,9 +11,8 @@
 
 #include "RCRadio.h"
 #include "Motor.h"
-#include "Adafruit_Sensor.h"
-#include "Adafruit_BNO055.h"
 #include "PID.h"
+#include "IMUFilter.h"
 
 // Core class that represenst a quadcopter and all of its components.
 class QuadCopter
@@ -42,7 +41,7 @@ class QuadCopter
 
 	 RCRadio receiver;
 	 Motor motors[NUM_MOTORS];
-	 Adafruit_BNO055 imu;
+	 IMUFilter imu;
 	 PID throttlePID;
 	 PID rollPID;
 	 PID pitchPID;
