@@ -67,6 +67,8 @@ class RCRadio
 	void readChannels(ChannelData &result);
 
 private:
+	uint32_t processDeadband(Channel channel, TimeInterval&);
+
 	struct ChannelConfig
 	{
 		long scalingMin;

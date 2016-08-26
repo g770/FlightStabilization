@@ -50,3 +50,32 @@ long ChannelConfig::getChannelMax(RCRadio::Channel channel)
 
 	return retVal;
 }
+
+
+static Deadband pitchDB { 1480, 1520, 1500 };
+static Deadband rollDB{ 1480, 1520, 1500 };
+static Deadband yawDB{ 1480, 1520, 1500 };
+
+Deadband* ChannelConfig::getChannelDeadband(RCRadio::Channel channel)
+{
+	Deadband *retVal = NULL;
+
+	switch (channel)
+	{
+	case RCRadio::Channel::PITCH:
+		retVal = &pitchDB;
+		break;
+	case RCRadio::Channel::ROLL:
+		retVal = &rollDB;
+		break;
+	case RCRadio::Channel::THROTTLE:
+		retVal = NULL;
+		break;
+	case RCRadio::Channel::YAW:
+		retVal = &yawDB;
+		break;
+	}
+
+	return retVal;
+}
+

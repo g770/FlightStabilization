@@ -10,6 +10,7 @@
 #endif
 
 #include "RCRadio.h"
+#include "Deadband.h"
 
 // Stores configuration for a single RC radio channel
 class ChannelConfig
@@ -21,6 +22,10 @@ public:
 
 	// Gets the maximum pulse width a channel can return
 	static long getChannelMax(RCRadio::Channel channel);
+
+	// Gets the deadband config for the channel
+	static Deadband* getChannelDeadband(RCRadio::Channel channel);
+
 };
 
 #endif

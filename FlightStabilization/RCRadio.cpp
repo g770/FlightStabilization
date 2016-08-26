@@ -1,6 +1,7 @@
 #include "RCRadio.h"
 #include "CommonDefs.h"
 #include "Math.h"
+#include "ChannelConfig.h"
 
 // The min and max pulse widths that can be received on a channel
 // The radio endpoints for each channel should be calibrated to send these as min and max values
@@ -40,8 +41,6 @@ void RCRadio::readChannels(ChannelData &result)
 	}
 }
 
-static long count = 0;
-
 bool RCRadio::readChannel(Channel channel, double* result)
 {
 	ChannelConfig channelConfig = this->pinMonitors[channel];
@@ -52,32 +51,39 @@ bool RCRadio::readChannel(Channel channel, double* result)
 
 	if (channelReadResult)
 	{
+		// Process deadband
+		uint32_t msec = processDeadband(channel, lastPulseWidth);
 
 		// Map the pulse width to the range for the channel and return it 
 		if (channelConfig.scalingMin == NO_SCALING && channelConfig.scalingMax == NO_SCALING)
 		{
-			*result = lastPulseWidth.getMicroSeconds();
+			*result = msec;
 		}
 		else
 		{
 
-			*result = Math::map_double(lastPulseWidth.getMicroSeconds(), MIN_CHANNEL_PULSE_WIDTH.getMicroSeconds(),
+			*result = Math::map_double(msec, MIN_CHANNEL_PULSE_WIDTH.getMicroSeconds(),
 				MAX_CHANNEL_PULSE_WIDTH.getMicroSeconds(), channelConfig.scalingMin, channelConfig.scalingMax);
-
-			/*
-			++count;
-			if ((count % 500) == 0)
-			{
-				DEBUG_PRINT(lastPulseWidth.getMicroSeconds());
-				DEBUG_PRINT(" -> ");
-				DEBUG_PRINTLN(*result);
-			}
-			*/
 		}
 
 		return true;
 	}
 
 	return false;
+}
+
+
+uint32_t RCRadio::processDeadband(Channel channel, TimeInterval& pulseWidth)
+{
+	Deadband* deadband = ::ChannelConfig::getChannelDeadband(channel);
+	uint32_t msec = pulseWidth.getMicroSeconds();
+	uint32_t retVal = msec;
+
+	if (deadband != NULL && msec >= deadband->lowEnd && msec <= deadband->highEnd)
+	{
+		retVal = deadband->deadbandValue;
+	}
+
+	return retVal;
 }
 
