@@ -24,7 +24,7 @@ public:
 	static long getChannelMax(RCRadio::Channel channel);
 
 	// Gets the deadband config for the channel
-	static Deadband* getChannelDeadband(RCRadio::Channel channel);
+	static const Deadband* getChannelDeadband(RCRadio::Channel channel);
 
 };
 

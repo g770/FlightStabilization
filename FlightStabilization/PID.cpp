@@ -3,6 +3,7 @@
 // 
 
 #include "PID.h"
+#include "CommonDefs.h"
 
 void PID::setPIDConstants(double p, double i, double d)
 {
@@ -11,18 +12,29 @@ void PID::setPIDConstants(double p, double i, double d)
 	this->derivative = d;
 }
 
-void PID::calculateCorrection(double actual, double desired, double &errorOut, double &correctionOut)
+void PID::calculateCorrection(double actual, double desired, double &errorOut, double &correctionOut, bool debug) const
 {
 	errorOut = desired - actual;
-	
-	//double absError = abs(errorOut);
+
 	this->accumulatedError += errorOut;  
 
 	double dt = actual - this->previousActual;
-	correctionOut = (this->proportional * errorOut) + (this->integral * this->accumulatedError) + 
-		(this->derivative * dt);
+	correctionOut = abs((this->proportional * errorOut) + (this->integral * this->accumulatedError) + 
+		(this->derivative * dt));
 
 	this->previousActual = actual;
+	if (debug)
+	{
+		DEBUG_PRINT("Actual, desired: ");
+		DEBUG_PRINT(actual);
+		DEBUG_PRINT(", ");
+		DEBUG_PRINTLN(desired);
+		DEBUG_PRINT("Error, correction: ");
+		DEBUG_PRINT(errorOut);
+		DEBUG_PRINT(", ");
+		DEBUG_PRINTLN(correctionOut);
+	}
+
 }
 
 void PID::reset()

@@ -12,6 +12,9 @@ const int BOTTOM_RIGHT_MOTOR = 3;
 
 const double ARMING_COMMAND_ERROR = 0.2;
 
+// How long to wait after sending arming pulses to ESCs.
+const int POST_ARMING_DELAY = 5000;
+
 void QuadCopter::init()
 {
 	DEBUG_PRINTLN("Quadcopter: Starting init");
@@ -27,10 +30,10 @@ void QuadCopter::init()
 	}
 
 	// Setup PID controllers
-	this->throttlePID.setPIDConstants(.01, 0, 0);
-	this->rollPID.setPIDConstants(.01, 0, 0);
-	this->pitchPID.setPIDConstants(.01, .01, 0);
-	this->yawPID.setPIDConstants(.01, .01, 0);
+	this->throttlePID.setPIDConstants(.05, 0, 0);
+	this->rollPID.setPIDConstants(.05, 0, 0);
+	this->pitchPID.setPIDConstants(.05, .01, 0);
+	this->yawPID.setPIDConstants(.05, .01, 0);
 
 	// Setup the receiver
 	this->receiver.configureChannel(RCRadio::THROTTLE, PinConfiguration::THROTTLE_PIN, 
@@ -77,21 +80,6 @@ void QuadCopter::update()
 		uint16_t newTopRightMotor = this->motors[TOP_RIGHT_MOTOR].getCurrentThrottle();
 		uint16_t newBottomRightMotor = this->motors[BOTTOM_RIGHT_MOTOR].getCurrentThrottle();
 
-		if ((counter % 10) == 0)
-		{
-			DEBUG_PRINT("TL: ");
-			DEBUG_PRINT(newTopLeftMotor);
-			DEBUG_PRINT(" ");
-			DEBUG_PRINT("TR: ");
-			DEBUG_PRINT(newTopRightMotor);
-			DEBUG_PRINT(" ");
-			DEBUG_PRINT("BL: ");
-			DEBUG_PRINT(newBottomLeftMotor);
-			DEBUG_PRINT(" ");
-			DEBUG_PRINT("BR: ");
-			DEBUG_PRINTLN(newBottomRightMotor);
-		}
-		counter++;
 
 		// Read the accelerometer
 		imu::Vector<3> accelerometer = this->imu.getVector();
@@ -132,9 +120,25 @@ void QuadCopter::update()
 
 		// Process each channel to calculate the new motor values
 		processThottleChannel(channelData, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor); 
-		processRollChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+		//processRollChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 		//processPitchChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 		//processYawChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+
+		if ((counter % 10) == 0)
+		{
+		DEBUG_PRINT("TL: ");
+		DEBUG_PRINT(newTopLeftMotor);
+		DEBUG_PRINT(" ");
+		DEBUG_PRINT("TR: ");
+		DEBUG_PRINT(newTopRightMotor);
+		DEBUG_PRINT(" ");
+		DEBUG_PRINT("BL: ");
+		DEBUG_PRINT(newBottomLeftMotor);
+		DEBUG_PRINT(" ");
+		DEBUG_PRINT("BR: ");
+		DEBUG_PRINTLN(newBottomRightMotor);
+		}
+		counter++;
 
 		// Write the new motor values
 		this->motors[TOP_LEFT_MOTOR].writeThrottle(newTopLeftMotor);
@@ -143,7 +147,7 @@ void QuadCopter::update()
 		this->motors[BOTTOM_RIGHT_MOTOR].writeThrottle(newBottomRightMotor);
 
 		// Check if the disarming command has been given
-		processDisarmingCommand(channelData);
+		//processDisarmingCommand(channelData);
 	}
 	else
 	{
@@ -155,7 +159,7 @@ void QuadCopter::update()
 }
 
 
-bool QuadCopter::isInArmingCommandErrorBounds(long channelData, long channelEndpoint)
+bool QuadCopter::isInArmingCommandErrorBounds(long channelData, long channelEndpoint) const
 {
 	double error = abs(channelEndpoint * ARMING_COMMAND_ERROR);
 
@@ -240,6 +244,8 @@ void QuadCopter::armMotors()
 		DEBUG_PRINT("Armed motor: ");
 		DEBUG_PRINTLN(i);
 	}
+
+	delay(POST_ARMING_DELAY);
 }
 
 void QuadCopter::processDisarmingCommand(RCRadio::ChannelData &channelData)
@@ -325,14 +331,19 @@ void QuadCopter::disarmMotors()
 
 }
 
-void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut) const
 {
 	if (channelData.channelResults[RCRadio::THROTTLE])
 	{
 		// Calc correction once and apply to all
 		double correction;
 		double error;
-		this->throttlePID.calculateCorrection(topLeftOut, channelData.channelData[RCRadio::THROTTLE], error, correction);
+		this->throttlePID.calculateCorrection(topLeftOut, channelData.channelData[RCRadio::THROTTLE], error, correction, false);
+
+		if (error < 0)
+		{
+			correction = -correction;
+		}
 
 		topLeftOut += correction;
 		bottomLeftOut += correction;
@@ -341,13 +352,13 @@ void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16
 	}
 }
 
-void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut) const
 {
 	if (channelData.channelResults[RCRadio::PITCH])
 	{
 		double correction;
 		double error;
-		this->pitchPID.calculateCorrection(Math::radianToDegrees(accelerometer.y()), channelData.channelData[RCRadio::PITCH], error, correction);
+		this->pitchPID.calculateCorrection(Math::radianToDegrees(accelerometer.y()), channelData.channelData[RCRadio::PITCH], error, correction, false);
 
 		// If error is positive we are pitching backward, correct by speeding up the rear motors and slowing the fronts
 		if (error > 0)
@@ -367,42 +378,41 @@ void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vec
 	}
 }
 
-void QuadCopter::processRollChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+void QuadCopter::processRollChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut) const
 {
 	if (channelData.channelResults[RCRadio::ROLL])
 	{
 		double correction;
 		double error;
-		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), channelData.channelData[RCRadio::ROLL], error, correction);
+		this->rollPID.calculateCorrection(Math::radianToDegrees(accelerometer.x()), channelData.channelData[RCRadio::ROLL], error, correction, false);
 
-		DEBUG_PRINT("Roll: ");
-		DEBUG_PRINTLN(channelData.channelData[RCRadio::ROLL]);
+		uint32_t roundedCorrection = Math::roundToInt(correction);
 
-		// If error is positive we are rolling to the right, correct by speeding up the right motors and slowing down the left
+		// If error is positive we want to roll to the right, correct by speeding up the left motors and slowing down the right
 		if (error > 0)
 		{
-			topLeftOut -= correction;
-			bottomLeftOut -= correction;
-			topRightOut += correction;
-			bottomRightOut += correction;
+			topLeftOut += roundedCorrection;
+			bottomLeftOut += roundedCorrection;
+			topRightOut -= roundedCorrection;
+			bottomRightOut -= roundedCorrection;
 		}
-		else // Rolling to the left, speed up the left motors and slow the right
+		else // Want to roll to the left, speed up the right motors and slow the left
 		{
-			topLeftOut += correction;
-			bottomLeftOut += correction;
-			topRightOut -= correction;
-			bottomRightOut -= correction;
-		}
+			topLeftOut -= roundedCorrection;
+			bottomLeftOut -= roundedCorrection;
+			topRightOut += roundedCorrection;
+			bottomRightOut += roundedCorrection;
+		}		
 	}
 }
 
-void QuadCopter::processYawChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut)
+void QuadCopter::processYawChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut) const
 {
 	if (channelData.channelResults[RCRadio::YAW])
 	{
 		double correction;
 		double error;
-		this->yawPID.calculateCorrection(Math::radianToDegrees(accelerometer.z()), channelData.channelData[RCRadio::YAW], error, correction);
+		this->yawPID.calculateCorrection(Math::radianToDegrees(accelerometer.z()), channelData.channelData[RCRadio::YAW], error, correction, false);
 
 		// If error is positive, we are yawing to the left, correct by speeding up the top right and bottom left motors
 		if (error > 0)

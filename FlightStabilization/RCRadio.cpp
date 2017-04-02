@@ -30,7 +30,7 @@ void RCRadio::configureChannel(Channel channel, uint8_t pinNum, long scalingMin,
 	DEBUG_PRINTLN(pinNum);
 }
 
-void RCRadio::readChannels(ChannelData &result)
+void RCRadio::readChannels(ChannelData &result) const
 {
 	for (int channel = 0; channel < NUM_CHANNELS; channel++)
 	{
@@ -41,7 +41,7 @@ void RCRadio::readChannels(ChannelData &result)
 	}
 }
 
-bool RCRadio::readChannel(Channel channel, double* result)
+bool RCRadio::readChannel(Channel channel, double* result) const
 {
 	ChannelConfig channelConfig = this->pinMonitors[channel];
 
@@ -73,9 +73,9 @@ bool RCRadio::readChannel(Channel channel, double* result)
 }
 
 
-uint32_t RCRadio::processDeadband(Channel channel, TimeInterval& pulseWidth)
+uint32_t RCRadio::processDeadband(Channel channel, TimeInterval& pulseWidth) const
 {
-	Deadband* deadband = ::ChannelConfig::getChannelDeadband(channel);
+	const Deadband* deadband = ::ChannelConfig::getChannelDeadband(channel);
 	uint32_t msec = pulseWidth.getMicroSeconds();
 	uint32_t retVal = msec;
 

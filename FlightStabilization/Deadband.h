@@ -1,5 +1,3 @@
-// Deadband.h
-
 #ifndef _DEADBAND_h
 #define _DEADBAND_h
 
@@ -9,6 +7,9 @@
 	#include "WProgram.h"
 #endif
 
+// Stores parameters for the deadband on a channel
+// When pulse widths within the range are observed, the 
+// deadband value is used
 struct Deadband
 {
 	uint32_t lowEnd;

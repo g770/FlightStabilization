@@ -19,7 +19,7 @@ public:
 	// Core PID calculation.  Takes the actual value (of a control), the desired value
 	// and returns the correction to apply calcuated by the PID algorithm.  The actual
 	// error value (desired - actual) is also returned.
-	void calculateCorrection(double actual, double desired, double &errorOut, double &correctionOut);
+	void calculateCorrection(double actual, double desired, double &errorOut, double &correctionOut, bool debug) const;
 
 	// Sets the PID state -- clears any accumulated error
 	void reset();
@@ -29,8 +29,8 @@ private:
 	double integral;
 	double derivative;
 
-	double accumulatedError;
-	double previousActual;
+	mutable double accumulatedError;
+	mutable double previousActual;
 };
 #endif
 

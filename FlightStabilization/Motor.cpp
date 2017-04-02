@@ -7,18 +7,21 @@
 const int MIN_THROTTLE = 1060;
 const int MAX_THROTTLE = 1860;
 
+const int MOTOR_OFF_PULSE = 0;
+
 // The pulse length to send when arming the motor
 const int ARMING_PULSE = 1000;
 
 // How many pulses to send when arming
-const int ARMING_PULSE_COUNT = 100;
+const int ARMING_PULSE_COUNT = 50;
 
 // Time delay between arming pulses
-const int ARMING_PULSE_DELAY = 19;
+const int ARMING_PULSE_DELAY = 20;
 
 void Motor::init(uint8_t pin)
 {
 	this->motorControl.attach(pin);
+	this->pin = pin;
 
 	DEBUG_PRINT("Motor: Attached to pin ");
 	DEBUG_PRINTLN(pin);
@@ -30,19 +33,16 @@ void Motor::arm()
 	for (int i = 0; i < ARMING_PULSE_COUNT; i++)
 	{
 		this->motorControl.writeMicroseconds(ARMING_PULSE);
-		delay(ARMING_PULSE_DELAY);
 	}
 
-	delay(5000);
-
 	// After the motor is armed, start the motor with a min throttle
-	this->motorControl.writeMicroseconds(MIN_THROTTLE);
-
+	//this->motorControl.writeMicroseconds(MIN_THROTTLE);
+	this->currentThrottle = MIN_THROTTLE_IN;
 }
 
 void Motor::off()
 {
-	this->motorControl.writeMicroseconds(0);
+	this->motorControl.writeMicroseconds(MOTOR_OFF_PULSE);
 }
 
 bool Motor::writeThrottle(uint16_t throttleValue)
@@ -57,8 +57,10 @@ bool Motor::writeThrottle(uint16_t throttleValue)
 	int microsecs = map(throttleValue, MIN_THROTTLE_IN, MAX_THROTTLE_IN, MIN_THROTTLE, MAX_THROTTLE);
 
 
-	//DEBUG_PRINT("Motor: Write throttle value ");
-	//DEBUG_PRINTLN(microsecs);
+	//DEBUG_PRINT("Motor ");
+	//DEBUG_PRINT(pin);
+	//DEBUG_PRINT(", ");
+	//DEBUG_PRINTLN(throttleValue);
 
 	this->motorControl.writeMicroseconds(microsecs);
 	this->currentThrottle = throttleValue;

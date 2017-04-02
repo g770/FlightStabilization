@@ -1,5 +1,3 @@
-// RCRadio.h
-
 #ifndef _RCRADIO_h
 #define _RCRADIO_h
 
@@ -9,7 +7,6 @@
 	#include "WProgram.h"
 #endif
 
-//#include <StandardCplusplus.h>
 #include "PWMReader.h"
 #include "CommonDefs.h"
 
@@ -61,13 +58,15 @@ class RCRadio
 	void configureChannel(Channel channel, uint8_t pinNum, long scalingMin, long scalingMax);
 
 	// Reads the current value of the given channel
-	bool readChannel(Channel channel, double* result);
+	bool readChannel(Channel channel, double* result) const;
 
 	// Reads all of the channels into a single structure
-	void readChannels(ChannelData &result);
+	void readChannels(ChannelData &result) const;
 
 private:
-	uint32_t processDeadband(Channel channel, TimeInterval&);
+	// Take an input pulse from a channel, determines if it is in the channel's deadband
+	// It returns the deadband value if it is in the deadband, otherwise the pulse width
+	uint32_t processDeadband(Channel channel, TimeInterval&) const;
 
 	struct ChannelConfig
 	{

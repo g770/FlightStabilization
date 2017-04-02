@@ -21,6 +21,17 @@ public:
 	{
 		return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 	}
+
+	// Rounds a double to an int.  If the double is negative, returns 0
+	static uint32_t roundToInt(double d)
+	{
+		uint32_t retVal = 0;
+		if (d > 0.0) {
+			retVal = (uint32_t)(d + 0.5);
+		}
+
+		return retVal;
+	}
 };
 
 #endif

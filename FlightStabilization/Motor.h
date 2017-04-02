@@ -16,6 +16,7 @@ class Motor
 {
 
 public:
+	// Min and max input range for the writeThrottle function
 	static const uint16_t MIN_THROTTLE_IN = 0;
 	static const uint16_t MAX_THROTTLE_IN = 1000;
 
@@ -35,13 +36,14 @@ public:
 	bool writeThrottle(uint16_t throttleValue);
 
 	// Returns the current throttle value
-	uint16_t getCurrentThrottle() { return this->currentThrottle; }
+	uint16_t getCurrentThrottle() const { return this->currentThrottle; }
 
  private:
 	 bool throttleValueValid(uint16_t throttleValue);
 
 	uint16_t currentThrottle;
 	Servo motorControl;
+	uint8_t pin;
 };
 
 

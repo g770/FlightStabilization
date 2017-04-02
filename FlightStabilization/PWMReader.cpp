@@ -146,7 +146,7 @@ static void handlePin7ChangeInterrupt()
 }
 
 
-inline uint8_t PWMReader::getMonitoredPin()
+inline uint8_t PWMReader::getMonitoredPin() const
 {
 	return this->monitoredPin;
 }
@@ -167,7 +167,7 @@ void PWMReader::monitorPin(uint8_t pinNum, TimeInterval minPulseWidth, TimeInter
 	DEBUG_PRINTLN(monitoredPin);
 }
 
-bool PWMReader::getLastPulseWidth(TimeInterval* outInterval)
+bool PWMReader::getLastPulseWidth(TimeInterval* outInterval) const
 {
 	uint8_t monitoredPin = this->getMonitoredPin();
 

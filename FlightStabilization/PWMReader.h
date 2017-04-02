@@ -25,10 +25,10 @@ class PWMReader
 
 	// Gets the number of the monitored pin -- returns INVALID_PIN if 
 	// no pin is currently monitored.
-	uint8_t getMonitoredPin();
+	uint8_t getMonitoredPin() const;
 
 	// Gets the width of the last pulse.
-	bool getLastPulseWidth(TimeInterval* );
+	bool getLastPulseWidth(TimeInterval* ) const;
 
 	static const uint8_t INVALID_PIN = -1;
 

@@ -5,6 +5,11 @@
 #include "ChannelConfig.h"
 #include "Motor.h"
 
+// Deadband parameters for each channel
+static const Deadband pitchDB{ 1480, 1520, 1500 };
+static const Deadband rollDB{ 1480, 1520, 1500 };
+static const Deadband yawDB{ 1480, 1520, 1500 };
+
 long ChannelConfig::getChannelMin(RCRadio::Channel channel)
 {
 	long retVal;
@@ -51,14 +56,9 @@ long ChannelConfig::getChannelMax(RCRadio::Channel channel)
 	return retVal;
 }
 
-
-static Deadband pitchDB { 1480, 1520, 1500 };
-static Deadband rollDB{ 1480, 1520, 1500 };
-static Deadband yawDB{ 1480, 1520, 1500 };
-
-Deadband* ChannelConfig::getChannelDeadband(RCRadio::Channel channel)
+const Deadband* ChannelConfig::getChannelDeadband(RCRadio::Channel channel)
 {
-	Deadband *retVal = NULL;
+	const Deadband *retVal = NULL;
 
 	switch (channel)
 	{
