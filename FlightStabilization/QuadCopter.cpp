@@ -119,12 +119,12 @@ void QuadCopter::update()
 		//DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.z()));
 
 		// Process each channel to calculate the new motor values
-		processThottleChannel(channelData, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor); 
+		//processThottleChannel(channelData, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor); 
 		//processRollChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
-		//processPitchChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+		processPitchChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 		//processYawChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
 
-		if ((counter % 10) == 0)
+		if ((counter % 100) == 0)
 		{
 		DEBUG_PRINT("TL: ");
 		DEBUG_PRINT(newTopLeftMotor);
@@ -340,15 +340,22 @@ void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16
 		double error;
 		this->throttlePID.calculateCorrection(topLeftOut, channelData.channelData[RCRadio::THROTTLE], error, correction, false);
 
+		uint32_t roundedCorrection = Math::roundToInt(correction);
+
 		if (error < 0)
 		{
-			correction = -correction;
+			topLeftOut = Math::subtractWithoutOverflow(topLeftOut, roundedCorrection);
+			bottomLeftOut = Math::subtractWithoutOverflow(bottomLeftOut, roundedCorrection);
+			topRightOut = Math::subtractWithoutOverflow(topRightOut, roundedCorrection);
+			bottomRightOut = Math::subtractWithoutOverflow(bottomRightOut, roundedCorrection);
 		}
-
-		topLeftOut += correction;
-		bottomLeftOut += correction;
-		topRightOut += correction;
-		bottomRightOut += correction;
+		else
+		{
+			topLeftOut = Math::addWithoutOverflow(topLeftOut, roundedCorrection);
+			bottomLeftOut = Math::addWithoutOverflow(bottomLeftOut, roundedCorrection);
+			topRightOut = Math::addWithoutOverflow(topRightOut, roundedCorrection);
+			bottomRightOut = Math::addWithoutOverflow(bottomRightOut, roundedCorrection);
+		}
 	}
 }
 
@@ -360,20 +367,22 @@ void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vec
 		double error;
 		this->pitchPID.calculateCorrection(Math::radianToDegrees(accelerometer.y()), channelData.channelData[RCRadio::PITCH], error, correction, false);
 
+		uint32_t roundedCorrection = Math::roundToInt(correction);
+
 		// If error is positive we are pitching backward, correct by speeding up the rear motors and slowing the fronts
 		if (error > 0)
 		{
-			topLeftOut -= correction;
-			bottomLeftOut += correction;
-			topRightOut -= correction;
-			bottomRightOut += correction;
+			topLeftOut = Math::subtractWithoutOverflow(topLeftOut, roundedCorrection);
+			bottomLeftOut = Math::addWithoutOverflow(bottomLeftOut, roundedCorrection);
+			topRightOut = Math::subtractWithoutOverflow(topRightOut, roundedCorrection);
+			bottomRightOut = Math::addWithoutOverflow(bottomRightOut, roundedCorrection);
 		}
 		else // pitching forward
 		{
-			topLeftOut += correction;
-			bottomLeftOut -= correction;
-			topRightOut += correction;
-			bottomRightOut -= correction;
+			topLeftOut = Math::addWithoutOverflow(topLeftOut, roundedCorrection);
+			bottomLeftOut = Math::subtractWithoutOverflow(bottomLeftOut, roundedCorrection);
+			topRightOut = Math::addWithoutOverflow(topRightOut, roundedCorrection);
+			bottomRightOut = Math::subtractWithoutOverflow(bottomRightOut, roundedCorrection);
 		}
 	}
 }
@@ -391,17 +400,17 @@ void QuadCopter::processRollChannel(RCRadio::ChannelData &channelData, imu::Vect
 		// If error is positive we want to roll to the right, correct by speeding up the left motors and slowing down the right
 		if (error > 0)
 		{
-			topLeftOut += roundedCorrection;
-			bottomLeftOut += roundedCorrection;
-			topRightOut -= roundedCorrection;
-			bottomRightOut -= roundedCorrection;
+			topLeftOut = Math::addWithoutOverflow(topLeftOut, roundedCorrection);
+			bottomLeftOut = Math::addWithoutOverflow(bottomLeftOut, roundedCorrection);
+			topRightOut = Math::subtractWithoutOverflow(topRightOut, roundedCorrection);
+			bottomRightOut = Math::subtractWithoutOverflow(bottomRightOut, roundedCorrection);
 		}
 		else // Want to roll to the left, speed up the right motors and slow the left
 		{
-			topLeftOut -= roundedCorrection;
-			bottomLeftOut -= roundedCorrection;
-			topRightOut += roundedCorrection;
-			bottomRightOut += roundedCorrection;
+			topLeftOut = Math::subtractWithoutOverflow(topLeftOut, roundedCorrection);
+			bottomLeftOut = Math::subtractWithoutOverflow(bottomLeftOut, roundedCorrection);
+			topRightOut = Math::addWithoutOverflow(topRightOut, roundedCorrection);
+			bottomRightOut = Math::addWithoutOverflow(bottomRightOut, roundedCorrection);
 		}		
 	}
 }

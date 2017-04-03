@@ -13,6 +13,12 @@
 class Math
 {
 public:
+	// Max value of the uint16_t type
+	static const uint16_t UINT16_T_MAX = (uint16_t)-1;
+
+	// Min value of the uint16_t type
+	static const uint16_t UINT16_T_MIN = 0;
+
 	// Converts radians to degrees
 	static double radianToDegrees(double rad);
 
@@ -32,6 +38,31 @@ public:
 
 		return retVal;
 	}
+
+	// Add 2 values without overflowing.  If the addition would result in 
+	// an overflow, the max value of the input type is returned.
+	static uint16_t addWithoutOverflow(uint16_t value, uint32_t increment)
+	{
+		uint16_t result = value + increment;
+		if (result < value) {
+			result = UINT16_T_MAX;
+		}
+
+		return result;
+	}
+
+	// Subtracts 2 values without overflowing.  If the subtraction would result in
+	// an overflow, the min value of the input type is returned.
+	static uint16_t subtractWithoutOverflow(uint16_t value, uint32_t increment)
+	{
+		uint16_t result = value - increment;
+		if (result > value) {
+			result = UINT16_T_MIN;
+		}
+
+		return result;
+	}
+
 };
 
 #endif
