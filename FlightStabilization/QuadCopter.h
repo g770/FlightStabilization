@@ -13,6 +13,7 @@
 #include "Motor.h"
 #include "PID.h"
 #include "IMUFilter.h"
+#include "MotorThrottleValue.h"
 
 // Core class that represenst a quadcopter and all of its components.
 class QuadCopter
@@ -27,10 +28,10 @@ class QuadCopter
 	 void update();
 
  private:
-	 void processThottleChannel(RCRadio::ChannelData &, uint16_t&, uint16_t&, uint16_t&, uint16_t&) const;
-	 void processPitchChannel(RCRadio::ChannelData &, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&) const;
-	 void processRollChannel(RCRadio::ChannelData &, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&) const;
-	 void processYawChannel(RCRadio::ChannelData &, imu::Vector<3>&, uint16_t&, uint16_t&, uint16_t&, uint16_t&) const;
+	 void processThottleChannel(RCRadio::ChannelData &);
+	 void processPitchChannel(RCRadio::ChannelData &, imu::Vector<3>&);
+	 void processRollChannel(RCRadio::ChannelData &, imu::Vector<3>&);
+	 void processYawChannel(RCRadio::ChannelData &, imu::Vector<3>&);
 	 void processArmingCommand(RCRadio::ChannelData &);
 	 void processDisarmingCommand(RCRadio::ChannelData &);
 	 void armMotors();
@@ -46,6 +47,10 @@ class QuadCopter
 	 PID rollPID;
 	 PID pitchPID;
 	 PID yawPID;
+	 MotorThrottleValue topLeftMotorValue;	 
+	 MotorThrottleValue topRightMotorValue;
+	 MotorThrottleValue bottomLeftMotorValue;
+	 MotorThrottleValue bottomRightMotorValue;
 	 bool isArmed;
 
 	 static const int ARMING_COUNT = 20;

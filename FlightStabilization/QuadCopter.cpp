@@ -55,7 +55,6 @@ void QuadCopter::init()
 	DEBUG_PRINTLN("Quadcopter: Initialized");
 }
 
-
 int counter = 0;
 void QuadCopter::update()
 {
@@ -75,10 +74,10 @@ void QuadCopter::update()
 	if (isArmed)
 	{
 		// Read current motor values
-		uint16_t newTopLeftMotor = this->motors[TOP_LEFT_MOTOR].getCurrentThrottle();
-		uint16_t newBottomLeftMotor = this->motors[BOTTOM_LEFT_MOTOR].getCurrentThrottle();
-		uint16_t newTopRightMotor = this->motors[TOP_RIGHT_MOTOR].getCurrentThrottle();
-		uint16_t newBottomRightMotor = this->motors[BOTTOM_RIGHT_MOTOR].getCurrentThrottle();
+		topLeftMotorValue.setThrottleValue(this->motors[TOP_LEFT_MOTOR].getCurrentThrottle());
+		bottomLeftMotorValue.setThrottleValue(this->motors[BOTTOM_LEFT_MOTOR].getCurrentThrottle());
+		topRightMotorValue.setThrottleValue(this->motors[TOP_RIGHT_MOTOR].getCurrentThrottle());
+		bottomRightMotorValue.setThrottleValue(this->motors[BOTTOM_RIGHT_MOTOR].getCurrentThrottle());
 
 
 		// Read the accelerometer
@@ -119,32 +118,32 @@ void QuadCopter::update()
 		//DEBUG_PRINTLN(Math::radianToDegrees(accelerometer.z()));
 
 		// Process each channel to calculate the new motor values
-		//processThottleChannel(channelData, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor); 
-		//processRollChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
-		processPitchChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
-		//processYawChannel(channelData, accelerometer, newTopLeftMotor, newBottomLeftMotor, newTopRightMotor, newBottomRightMotor);
+		processThottleChannel(channelData); 
+		//processRollChannel(channelData, accelerometer);
+		//processPitchChannel(channelData, accelerometer);
+		processYawChannel(channelData, accelerometer);
 
 		if ((counter % 100) == 0)
 		{
 		DEBUG_PRINT("TL: ");
-		DEBUG_PRINT(newTopLeftMotor);
+		DEBUG_PRINT(topLeftMotorValue.getThrottleValue());
 		DEBUG_PRINT(" ");
 		DEBUG_PRINT("TR: ");
-		DEBUG_PRINT(newTopRightMotor);
+		DEBUG_PRINT(topRightMotorValue.getThrottleValue());
 		DEBUG_PRINT(" ");
 		DEBUG_PRINT("BL: ");
-		DEBUG_PRINT(newBottomLeftMotor);
+		DEBUG_PRINT(bottomLeftMotorValue.getThrottleValue());
 		DEBUG_PRINT(" ");
 		DEBUG_PRINT("BR: ");
-		DEBUG_PRINTLN(newBottomRightMotor);
+		DEBUG_PRINTLN(bottomRightMotorValue.getThrottleValue());
 		}
 		counter++;
 
 		// Write the new motor values
-		this->motors[TOP_LEFT_MOTOR].writeThrottle(newTopLeftMotor);
-		this->motors[BOTTOM_LEFT_MOTOR].writeThrottle(newBottomLeftMotor);
-		this->motors[TOP_RIGHT_MOTOR].writeThrottle(newTopRightMotor);
-		this->motors[BOTTOM_RIGHT_MOTOR].writeThrottle(newBottomRightMotor);
+		this->motors[TOP_LEFT_MOTOR].writeThrottle(topLeftMotorValue.getThrottleValue());
+		this->motors[BOTTOM_LEFT_MOTOR].writeThrottle(bottomLeftMotorValue.getThrottleValue());
+		this->motors[TOP_RIGHT_MOTOR].writeThrottle(topRightMotorValue.getThrottleValue());
+		this->motors[BOTTOM_RIGHT_MOTOR].writeThrottle(bottomRightMotorValue.getThrottleValue());
 
 		// Check if the disarming command has been given
 		//processDisarmingCommand(channelData);
@@ -331,35 +330,35 @@ void QuadCopter::disarmMotors()
 
 }
 
-void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut) const
+void QuadCopter::processThottleChannel(RCRadio::ChannelData &channelData)
 {
 	if (channelData.channelResults[RCRadio::THROTTLE])
 	{
 		// Calc correction once and apply to all
 		double correction;
 		double error;
-		this->throttlePID.calculateCorrection(topLeftOut, channelData.channelData[RCRadio::THROTTLE], error, correction, false);
+		this->throttlePID.calculateCorrection(topLeftMotorValue.getThrottleValue(), channelData.channelData[RCRadio::THROTTLE], error, correction, false);
 
 		uint32_t roundedCorrection = Math::roundToInt(correction);
 
 		if (error < 0)
 		{
-			topLeftOut = Math::subtractWithoutOverflow(topLeftOut, roundedCorrection);
-			bottomLeftOut = Math::subtractWithoutOverflow(bottomLeftOut, roundedCorrection);
-			topRightOut = Math::subtractWithoutOverflow(topRightOut, roundedCorrection);
-			bottomRightOut = Math::subtractWithoutOverflow(bottomRightOut, roundedCorrection);
+			topLeftMotorValue.decrease(roundedCorrection);
+			bottomLeftMotorValue.decrease(roundedCorrection);
+			topRightMotorValue.decrease(roundedCorrection);
+			bottomRightMotorValue.decrease(roundedCorrection);
 		}
 		else
 		{
-			topLeftOut = Math::addWithoutOverflow(topLeftOut, roundedCorrection);
-			bottomLeftOut = Math::addWithoutOverflow(bottomLeftOut, roundedCorrection);
-			topRightOut = Math::addWithoutOverflow(topRightOut, roundedCorrection);
-			bottomRightOut = Math::addWithoutOverflow(bottomRightOut, roundedCorrection);
+			topLeftMotorValue.increase(roundedCorrection);
+			bottomLeftMotorValue.increase(roundedCorrection);
+			topRightMotorValue.increase(roundedCorrection);
+			bottomRightMotorValue.increase(roundedCorrection);
 		}
 	}
 }
 
-void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut) const
+void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer)
 {
 	if (channelData.channelResults[RCRadio::PITCH])
 	{
@@ -372,22 +371,25 @@ void QuadCopter::processPitchChannel(RCRadio::ChannelData &channelData, imu::Vec
 		// If error is positive we are pitching backward, correct by speeding up the rear motors and slowing the fronts
 		if (error > 0)
 		{
-			topLeftOut = Math::subtractWithoutOverflow(topLeftOut, roundedCorrection);
-			bottomLeftOut = Math::addWithoutOverflow(bottomLeftOut, roundedCorrection);
-			topRightOut = Math::subtractWithoutOverflow(topRightOut, roundedCorrection);
-			bottomRightOut = Math::addWithoutOverflow(bottomRightOut, roundedCorrection);
+			topLeftMotorValue.decrease(roundedCorrection);
+			topRightMotorValue.decrease(roundedCorrection);
+
+			bottomLeftMotorValue.increase(roundedCorrection);
+			bottomRightMotorValue.increase(roundedCorrection);
 		}
 		else // pitching forward
 		{
-			topLeftOut = Math::addWithoutOverflow(topLeftOut, roundedCorrection);
-			bottomLeftOut = Math::subtractWithoutOverflow(bottomLeftOut, roundedCorrection);
-			topRightOut = Math::addWithoutOverflow(topRightOut, roundedCorrection);
-			bottomRightOut = Math::subtractWithoutOverflow(bottomRightOut, roundedCorrection);
+			bottomLeftMotorValue.decrease(roundedCorrection);
+			bottomRightMotorValue.decrease(roundedCorrection);
+
+			topLeftMotorValue.increase(roundedCorrection);
+			topRightMotorValue.increase(roundedCorrection);
+
 		}
 	}
 }
 
-void QuadCopter::processRollChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut) const
+void QuadCopter::processRollChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer)
 {
 	if (channelData.channelResults[RCRadio::ROLL])
 	{
@@ -400,22 +402,22 @@ void QuadCopter::processRollChannel(RCRadio::ChannelData &channelData, imu::Vect
 		// If error is positive we want to roll to the right, correct by speeding up the left motors and slowing down the right
 		if (error > 0)
 		{
-			topLeftOut = Math::addWithoutOverflow(topLeftOut, roundedCorrection);
-			bottomLeftOut = Math::addWithoutOverflow(bottomLeftOut, roundedCorrection);
-			topRightOut = Math::subtractWithoutOverflow(topRightOut, roundedCorrection);
-			bottomRightOut = Math::subtractWithoutOverflow(bottomRightOut, roundedCorrection);
+			topLeftMotorValue.increase(roundedCorrection);
+			bottomLeftMotorValue.increase(roundedCorrection);
+			topRightMotorValue.decrease(roundedCorrection);
+			bottomRightMotorValue.decrease(roundedCorrection);
 		}
 		else // Want to roll to the left, speed up the right motors and slow the left
 		{
-			topLeftOut = Math::subtractWithoutOverflow(topLeftOut, roundedCorrection);
-			bottomLeftOut = Math::subtractWithoutOverflow(bottomLeftOut, roundedCorrection);
-			topRightOut = Math::addWithoutOverflow(topRightOut, roundedCorrection);
-			bottomRightOut = Math::addWithoutOverflow(bottomRightOut, roundedCorrection);
+			topLeftMotorValue.decrease(roundedCorrection);
+			bottomLeftMotorValue.decrease(roundedCorrection);
+			topRightMotorValue.increase(roundedCorrection);
+			bottomRightMotorValue.increase(roundedCorrection);
 		}		
 	}
 }
 
-void QuadCopter::processYawChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer, uint16_t &topLeftOut, uint16_t &bottomLeftOut, uint16_t &topRightOut, uint16_t &bottomRightOut) const
+void QuadCopter::processYawChannel(RCRadio::ChannelData &channelData, imu::Vector<3> &accelerometer)
 {
 	if (channelData.channelResults[RCRadio::YAW])
 	{
@@ -423,20 +425,22 @@ void QuadCopter::processYawChannel(RCRadio::ChannelData &channelData, imu::Vecto
 		double error;
 		this->yawPID.calculateCorrection(Math::radianToDegrees(accelerometer.z()), channelData.channelData[RCRadio::YAW], error, correction, false);
 
+		uint32_t roundedCorrection = Math::roundToInt(correction);
+
 		// If error is positive, we are yawing to the left, correct by speeding up the top right and bottom left motors
 		if (error > 0)
 		{
-			topLeftOut -= correction;
-			bottomLeftOut += correction;
-			topRightOut += correction;
-			bottomRightOut -= correction;
+			topLeftMotorValue.decrease(roundedCorrection);
+			bottomLeftMotorValue.increase(roundedCorrection);
+			topRightMotorValue.increase(roundedCorrection);
+			bottomRightMotorValue.decrease(roundedCorrection);
 		}
 		else
 		{
-			topLeftOut += correction;
-			bottomLeftOut -= correction;
-			topRightOut -= correction;
-			bottomRightOut += correction;
+			topLeftMotorValue.increase(roundedCorrection);
+			bottomLeftMotorValue.decrease(roundedCorrection);
+			topRightMotorValue.decrease(roundedCorrection);
+			bottomRightMotorValue.increase(roundedCorrection);
 		}
 	}
 }
